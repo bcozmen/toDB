@@ -1,8 +1,8 @@
 from collections import defaultdict
 import math
 import random
-
 from torch.utils.data import Sampler
+
 
 class SameFileBatchSampler(Sampler):
     """Yield batches whose samples all reference one Parquet event part."""
@@ -14,12 +14,10 @@ class SameFileBatchSampler(Sampler):
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.drop_last = drop_last
+        self.batch_size_with_negatives = batch_size // 2 * 3
 
-        groups = defaultdict(list)
-        for index, row in enumerate(dataset.index):
-            groups[row["event_file"]].append(index)
-        self.groups = list(groups.values())
-        self.batch_size_with_negatives = batch_size // 2 * 3  # 2 positive samples + 1 negative sample per positive sample  
+
+        self.groups = dataset.get_event_file_groups()
 
 
     def __iter__(self):
@@ -31,7 +29,7 @@ class SameFileBatchSampler(Sampler):
             if self.shuffle:
                 random.shuffle(group)
             for start in range(0, len(group), self.batch_size_with_negatives):
-                batch = group[start:start + self.batch_size_with_negatives]
+                batch = group[start : start + self.batch_size_with_negatives]
                 if len(batch) == self.batch_size_with_negatives or not self.drop_last:
                     yield batch
 
@@ -39,4 +37,3 @@ class SameFileBatchSampler(Sampler):
         if self.drop_last:
             return sum(len(group) // self.batch_size_with_negatives for group in self.groups)
         return sum(math.ceil(len(group) / self.batch_size_with_negatives) for group in self.groups)
-

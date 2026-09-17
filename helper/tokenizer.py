@@ -2,12 +2,13 @@
 
 from pathlib import Path
 
-
-from .vocab import HealthcareVocab
-
+try:
+    from .vocab import HealthcareVocab
+except ImportError:
+    from vocab import HealthcareVocab
 
 PATIENT_DISCRETE_COLUMNS = ("gender", "race", "ethnicity", "birthplace", "city")
-PATIENT_FEATURE_COLUMNS = PATIENT_DISCRETE_COLUMNS + ("income",)
+PATIENT_FEATURE_COLUMNS = PATIENT_DISCRETE_COLUMNS + ("time", "income")
 EVENT_TYPES = {
     "encounter": "encounters", "condition": "conditions", "medication": "medications",
     "procedure": "procedures", "observation": "observations", "immunization": "immunizations",
@@ -17,7 +18,7 @@ EVENT_TO_INDEX = {"patients": 0, **{table: i + 1 for i, table in enumerate(EVENT
 
 
 class HealthcareTokenizer:
-    """Encode database rows into the eight-channel model token format."""
+    """Encode database rows into the nine-channel model token format."""
 
     EVENT_TOKEN_COLUMNS = tuple(f"token_{i}" for i in range(9))
 
@@ -31,16 +32,19 @@ class HealthcareTokenizer:
         table = EVENT_TYPES[event["event_type"]]
         value = event.get("value")
         code = self.vocab.encode(None) if event.get("code") is None else self.encode(f"{table}.code.{event['code']}")
+        birth = event.get("birth_time", event.get("patient_start_time"))
+        start = self._effective_time(event.get("start_time"), event.get("encounter_start_time"))
+        stop = self._effective_time(event.get("stop_time"), event.get("encounter_start_time"))
         return [
             code, #discrete value
             float("nan") if value is None else float(value), #continuous value
             0.0 if value is None else 1.0, #is_continuous
-            self._time(event.get("start_time")), # start_time
-            self._time(event.get("stop_time")), # stop_time
+            self._age(start, birth), # start age
+            self._duration(start, stop), # stop duration
+            float(event.get("time_since_previous_event", 0.0)), # time since previous event
             self.encode(table), # table index
             self.encode(f"{table}.code"), # column index
             float(EVENT_TO_INDEX[table]), # event type index decoded
-            float(event.get("time_since_previous_event", 0.0)), # time since previous event
         ]
 
     def tokenize_patient(self, patient: dict) -> list[list[float]]:
@@ -53,12 +57,31 @@ class HealthcareTokenizer:
         income = float("nan") if not income_present else float(patient["income"])
         # Income is continuous: keep token_0 as the categorical/missing-value
         # channel and put the actual amount in token_1.
-        values = discrete + [self.vocab.encode(None)]
+        values = discrete + [self.vocab.encode(None), self.vocab.encode(None)]
         columns = [self.encode(f"patients.{column}") for column in PATIENT_FEATURE_COLUMNS]
-        start, stop = self._time(patient.get("patient_start_time")), self._time(patient.get("patient_stop_time"))
-        return [values, [float("nan")] * 5 + [income], [0.0] * 5 + [float(income_present)],
-                [start] * 6, [stop] * 6, [self.encode("patients")] * 6,
-                columns, [EVENT_TO_INDEX["patients"]] * 6, [0.0] * 6]
+        start = self._time(patient.get("patient_start_time"))
+        stop = self._duration(patient.get("patient_start_time"), patient.get("patient_stop_time"))
+        return [values, [float("nan")] * 6 + [income], [0.0] * 6 + [float(income_present)],
+            [start] * 7, [stop] * 7, [0.0] * 7, [self.encode("patients")] * 7,
+            columns, [EVENT_TO_INDEX["patients"]] * 7]
+
+    @staticmethod
+    def _effective_time(value, encounter_start):
+        if value is None or encounter_start is None:
+            return value
+        return max(value, encounter_start)
+
+    @classmethod
+    def _age(cls, value, birth) -> float:
+        if value is None or birth is None:
+            return float("inf")
+        return value.timestamp() - birth.timestamp()
+
+    @classmethod
+    def _duration(cls, start, stop) -> float:
+        if start is None or stop is None:
+            return float("inf")
+        return max(stop.timestamp() - start.timestamp(), 0.0)
 
     @staticmethod
     def _time(value) -> float:

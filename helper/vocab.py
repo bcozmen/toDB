@@ -10,6 +10,9 @@ class HealthcareVocab():
         if path:
             self.load(path)
 
+    def __len__(self):
+        return len(self.str_to_id)
+
     def add(self, tokens):
         if not isinstance(tokens, list):
             tokens = [tokens]

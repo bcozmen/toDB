@@ -23,7 +23,7 @@ VOCAB_CATEGORICAL_COLUMNS = {
 }
 
 VOCAB_NUMERIC_COLUMNS = {
-    "patients": ['income'],
+    "patients": ['time', 'income'],
     "observations": ['value'],
 }
 #Discrete Timestamp, Continuous
@@ -35,10 +35,10 @@ out_dir.mkdir(parents=True, exist_ok=True)
 
 
 con = duckdb.connect(str(DATABASE_PATH), read_only=True)
-vocabulary = HealthcareVocab()
-vocabulary.add(SPECIAL_TOKENS)
+dictionary = HealthcareVocab()
+dictionary.add(SPECIAL_TOKENS)
 for table_name, columns in VOCAB_CATEGORICAL_COLUMNS.items():
-    vocabulary.add(table_name)
+    dictionary.add(table_name)
     for column in columns:
         query = f"""
         SELECT DISTINCT CAST("{column}" AS VARCHAR)
@@ -52,13 +52,13 @@ for table_name, columns in VOCAB_CATEGORICAL_COLUMNS.items():
 
         unique_values = [table_name + "." + column + "." + row[0] for row in con.execute(query).fetchall()]
 
-        vocabulary.add(unique_values)
-        vocabulary.add(table_name + "." + column)
+        dictionary.add(unique_values)
+        dictionary.add(table_name + "." + column)
 
 for table_name, columns in VOCAB_NUMERIC_COLUMNS.items():
-    vocabulary.add(table_name)
+    dictionary.add(table_name)
     for column in columns:
-        vocabulary.add(table_name + "." + column)
+        dictionary.add(table_name + "." + column)
 
 
-vocabulary.save(VOCAB_PATH)
+dictionary.save(VOCAB_PATH)

@@ -199,6 +199,8 @@ def main():
     PARQUET_PATH.mkdir(parents=True, exist_ok=True)
 
     with duckdb.connect() as con:
+        con.execute("SET threads = 24")
+        con.execute("SET preserve_insertion_order = false")
         for table_name, export in EXPORTS.items():
             con.execute(build_export_query(table_name, export))
             print(f"Exported {table_name}")

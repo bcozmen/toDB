@@ -8,7 +8,7 @@ except ImportError:
     from vocab import HealthcareVocab
 
 PATIENT_DISCRETE_COLUMNS = ("gender", "race", "ethnicity", "birthplace", "city")
-PATIENT_FEATURE_COLUMNS = PATIENT_DISCRETE_COLUMNS + ("income",)
+PATIENT_FEATURE_COLUMNS = PATIENT_DISCRETE_COLUMNS + ("time", "income")
 EVENT_TYPES = {
     "encounter": "encounters", "condition": "conditions", "medication": "medications",
     "procedure": "procedures", "observation": "observations", "immunization": "immunizations",
@@ -57,13 +57,13 @@ class HealthcareTokenizer:
         income = float("nan") if not income_present else float(patient["income"])
         # Income is continuous: keep token_0 as the categorical/missing-value
         # channel and put the actual amount in token_1.
-        values = discrete + [self.vocab.encode(None)]
+        values = discrete + [self.vocab.encode(None), self.vocab.encode(None)]
         columns = [self.encode(f"patients.{column}") for column in PATIENT_FEATURE_COLUMNS]
         start = self._time(patient.get("patient_start_time"))
         stop = self._duration(patient.get("patient_start_time"), patient.get("patient_stop_time"))
-        return [values, [float("nan")] * 5 + [income], [0.0] * 5 + [float(income_present)],
-                [start] * 6, [stop] * 6, [0.0] * 6, [self.encode("patients")] * 6,
-                columns, [EVENT_TO_INDEX["patients"]] * 6]
+        return [values, [float("nan")] * 6 + [income], [0.0] * 6 + [float(income_present)],
+            [start] * 7, [stop] * 7, [0.0] * 7, [self.encode("patients")] * 7,
+            columns, [EVENT_TO_INDEX["patients"]] * 7]
 
     @staticmethod
     def _effective_time(value, encounter_start):
