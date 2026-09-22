@@ -1,9 +1,6 @@
-from pathlib import Path
-
 import duckdb
+from __init__ import DATASET_PATH
 
-
-DATASET_PATH = Path("/home/baris/database_transformer/dataset")
 CSV_PATH = DATASET_PATH / "csv"
 PARQUET_PATH = DATASET_PATH / "parquet"
 

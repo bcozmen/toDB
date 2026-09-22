@@ -1,13 +1,12 @@
 import torch
 import duckdb
 import torch
-from pathlib import Path
-from helper.vocab import HealthcareVocab
+from __init__ import DATASET_PATH
 
+from helper.dictionary import HealthCareDictionary
 
-DATASET_ROOT = "/home/baris/database_transformer/dataset"
-DATABASE_PATH = f"{DATASET_ROOT}/healthcare.duckdb"
-VOCAB_PATH = f"{DATASET_ROOT}/ml/vocab.pt"
+DATABASE_PATH = DATASET_PATH / "healthcare.duckdb"
+VOCAB_PATH = DATASET_PATH / "ml/vocab.pt"
 
 VOCAB_CATEGORICAL_COLUMNS = {
     "patients": ['gender', 'race', 'ethnicity', 'birthplace', 'city'],
@@ -30,12 +29,11 @@ VOCAB_NUMERIC_COLUMNS = {
 SPECIAL_TOKENS = [None, torch.inf, torch.nan]
 
 
-out_dir = Path(VOCAB_PATH).parent
-out_dir.mkdir(parents=True, exist_ok=True)
+VOCAB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
-con = duckdb.connect(str(DATABASE_PATH), read_only=True)
-dictionary = HealthcareVocab()
+con = duckdb.connect(DATABASE_PATH, read_only=True)
+dictionary = HealthCareDictionary()
 dictionary.add(SPECIAL_TOKENS)
 for table_name, columns in VOCAB_CATEGORICAL_COLUMNS.items():
     dictionary.add(table_name)

@@ -15,5 +15,24 @@ Slot | Column | token_0 | token_1 | token_2 | token_3 | token_4 | token_5 | toke
 2 | ethnicity | ethnicity_v ID | NaN | 0.0 | patient_start | patient_duration | 0.0 | patients_v ID | ethnicity_col ID | 0.0
 3 | birthplace | birthplace_v ID | NaN | 0.0 | patient_start | patient_duration | 0.0 | patients_v ID | birthplace_col ID | 0.0
 4 | city | city_v ID | NaN | 0.0 | patient_start | patient_duration | 0.0 | patients_v ID | city_col ID | 0.0
-5 | income | null_v ID | income | 1.0/0.0 | patient_start | patient_duration | 0.0 | patients_v ID | income_col ID | 0.0
-6 | padding | null_v ID | NaN | 0.0 | patient_start | patient_duration | 0.0 | patients_v ID | extra_col ID | 0.0
+5 | time | null_v ID | NaN | 0.0 | patient_start | patient_duration | 0.0 | patients_v ID | time_col ID | 0.0
+6 | income | null_v ID | income | 1.0/0.0 | patient_start | patient_duration | 0.0 | patients_v ID | income_col ID | 0.0
+
+Patient feature order is therefore:
+
+```text
+0: gender
+1: race
+2: ethnicity
+3: birthplace
+4: city
+5: time
+6: income
+```
+
+The serialized exporter currently repeats patient time fields across all seven
+patient slots. `PatientEventsDataset` removes those repeated values at load
+time: only slot 5 retains time information. In the runtime model input, slot 5
+uses relative patient age (`token_3 = 0`, `token_4 = current age`,
+`token_5 = 0`), while the other patient slots use `inf` for their time fields
+to represent missing time values.

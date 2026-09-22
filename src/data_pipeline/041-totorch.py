@@ -1,9 +1,9 @@
-from pathlib import Path
 import os
 import shutil
 import time
 import duckdb
 import pandas as pd
+from data_pipeline import DATASET_PATH
 
 from helper.tokenizer import (
     EVENT_TO_INDEX,
@@ -13,7 +13,6 @@ from helper.tokenizer import (
     HealthcareTokenizer,
 )
 
-DATASET_PATH = Path("/home/baris/database_transformer/dataset")
 ML_PATH = DATASET_PATH / "ml"
 DATABASE_PATH = DATASET_PATH / "healthcare.duckdb"
 VOCAB_PATH = ML_PATH / "vocab.pt"

@@ -42,3 +42,9 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+dataset/
+db_explorer/
+checkpoints/
+logs/
+src/data_pipeline/synthea/

@@ -1,11 +1,7 @@
 """Shared token layout used by the offline exporter and the PyTorch loader."""
 
-from pathlib import Path
 
-try:
-    from .vocab import HealthcareVocab
-except ImportError:
-    from vocab import HealthcareVocab
+from .dictionary import HealthCareDictionary
 
 PATIENT_DISCRETE_COLUMNS = ("gender", "race", "ethnicity", "birthplace", "city")
 PATIENT_FEATURE_COLUMNS = PATIENT_DISCRETE_COLUMNS + ("time", "income")
@@ -22,8 +18,8 @@ class HealthcareTokenizer:
 
     EVENT_TOKEN_COLUMNS = tuple(f"token_{i}" for i in range(9))
 
-    def __init__(self, vocab_path: str | Path):
-        self.vocab = HealthcareVocab(str(vocab_path))
+    def __init__(self, vocab_path):
+        self.vocab = HealthCareDictionary(str(vocab_path))
 
     def encode(self, value):
         return self.vocab.encode(value)

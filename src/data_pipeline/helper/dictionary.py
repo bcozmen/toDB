@@ -1,8 +1,7 @@
 import torch
 import duckdb
-import torch
 
-class HealthcareVocab():
+class HealthCareDictionary():
     def __init__(self, path = None):
         self.path = path
         self.str_to_id = {}
