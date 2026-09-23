@@ -1,0 +1,211 @@
+.schema-flow {
+  width: 100%;
+  height: 100%;
+  background: #1e1e1e;
+}
+
+/* ELK recalculates positions after a toggle; animate those transforms without
+   moving the user's current zoom or pan. */
+.schema-flow .react-flow__node {
+  transition: transform 240ms ease;
+}
+
+.schema-table-node {
+  min-width: 220px;
+  overflow: none;
+  color: #cccccc;
+  background: #252526;
+  border: 1px solid #007acc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 50%);
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.schema-table-handle {
+  width: 8px;
+  height: 8px;
+  background: #007acc;
+}
+
+.schema-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  color: #ffffff;
+  background: #007acc;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+}
+
+.schema-table-header:hover {
+  background: #168bd0;
+}
+
+.schema-table-header:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: -3px;
+}
+
+.schema-table-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schema-table-chevron {
+  margin-left: 12px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.schema-table-columns {
+  padding: 6px 0;
+}
+
+.schema-table-column {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 12px;
+  border-bottom: 1px solid #333333;
+}
+
+.schema-table-column:last-child {
+  border-bottom: 0;
+}
+
+.schema-column-name {
+  color: #dcdcaa;
+}
+
+.schema-column-name.is-primary-key {
+  color: #ffd700;
+}
+
+.schema-column-name.is-foreign-key {
+  color: #4ec9b0;
+}
+
+.schema-column-link {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.schema-column-link:hover,
+.schema-column-link:focus-visible {
+  color: #ffffff;
+  text-decoration-style: solid;
+}
+
+.schema-column-link:focus-visible {
+  outline: 1px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.schema-column-type {
+  margin-left: 12px;
+  color: #858585;
+}
+
+.schema-dictionary-menu {
+  position: absolute;
+  overflow: hidden;
+  color: #cccccc;
+  background: #252526;
+  border: 1px solid #007acc;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 65%);
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.schema-dictionary-connector {
+  position: absolute;
+  z-index: 9999;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.schema-dictionary-connector path {
+  stroke: #4ec9b0;
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.schema-dictionary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  color: #ffffff;
+  background: #007acc;
+  font-weight: bold;
+  cursor: grab;
+  user-select: none;
+}
+
+.schema-dictionary-heading:active {
+  cursor: grabbing;
+}
+
+.schema-dictionary-heading button {
+  padding: 0 3px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.schema-dictionary-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.schema-dictionary-entry {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1.5fr);
+  gap: 10px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #333333;
+}
+
+.schema-dictionary-entry:last-child {
+  border-bottom: 0;
+}
+
+.schema-dictionary-entry strong {
+  overflow-wrap: anywhere;
+  color: #dcdcaa;
+}
+
+.schema-dictionary-entry span {
+  overflow-wrap: anywhere;
+  color: #cccccc;
+}
+
+.schema-dictionary-empty {
+  padding: 14px 10px;
+  color: #858585;
+}

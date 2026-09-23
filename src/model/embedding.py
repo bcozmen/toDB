@@ -4,6 +4,8 @@ import torch.nn as nn
 from .helper import NumericProjectionWithFrequency
 
 class Embedding(nn.Module):
+    MASK_CHANNEL = 10
+
     def __init__(self, embedding_dim, dictionary, embedding_length=6, num_frequencies=10, dropout=0.1):
         super(Embedding, self).__init__()
         self.dictionary = dictionary
@@ -15,6 +17,9 @@ class Embedding(nn.Module):
         self.numeric = NumericProjectionWithFrequency(input_dim=1, output_dim=self.latent_dim, num_frequencies=num_frequencies, time=False)
         self.time = NumericProjectionWithFrequency(input_dim=1, output_dim=self.latent_dim, num_frequencies=num_frequencies, time=True)
         self.source_target = nn.Embedding(num_embeddings=2, embedding_dim=self.latent_dim)  # For source/target indicator
+        # Content masking is supplied by the dataset so paired positive and
+        # negative sequences receive exactly the same mask signature.
+        self.mask_token = nn.Parameter(torch.randn(1, self.embedding_length - 1, 1, self.latent_dim) * 0.02)
 
         self.time_columns = [3]  # Start time
 
@@ -43,10 +48,18 @@ class Embedding(nn.Module):
         numeric = self.get_numeric_embeddings(X[..., [1], :], X[..., [2], :])
         time = self.get_time_embeddings(X[..., self.time_columns, :])
         cat_last = self.get_categorical_embeddings(X[..., [6, 7], :])
-        # Row 9 marks sampled target positions. Both classes receive the same
-        # sampled marker pattern; only negative samples replace the marked tokens.
         source_target = self.source_target(X[..., [9], :].long())
         embeddings = torch.cat([cat_first, numeric, time, cat_last, source_target], dim=1)
+
+        # Mask all content features together.  The source/target marker is a
+        # sampling-role indicator, not token content, so it remains visible.
+        content_mask = X[..., self.MASK_CHANNEL:self.MASK_CHANNEL + 1, :].bool()
+        masked_content = torch.where(
+            content_mask.unsqueeze(-1),
+            self.mask_token.to(dtype=embeddings.dtype),
+            embeddings[:, :-1],
+        )
+        embeddings = torch.cat([masked_content, embeddings[:, -1:]], dim=1)
         #embeddings shape = (batch_size, embedding_length, seq_length, embedding_dim)
 
         #pad embeddings with the empty token

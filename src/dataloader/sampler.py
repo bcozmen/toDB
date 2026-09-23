@@ -16,7 +16,6 @@ class SameFileBatchSampler(Sampler):
         self.drop_last = drop_last
 
         self.groups = dataset.get_event_file_groups()
-        self.effective_batch_size = 3 * (batch_size // 2) 
 
 
     def __iter__(self):
@@ -27,12 +26,12 @@ class SameFileBatchSampler(Sampler):
         for group in groups:
             if self.shuffle:
                 random.shuffle(group)
-            for start in range(0, len(group), self.effective_batch_size):
-                batch = group[start : start + self.effective_batch_size]
-                if len(batch) == self.effective_batch_size or not self.drop_last:
+            for start in range(0, len(group), self.batch_size):
+                batch = group[start : start + self.batch_size]
+                if len(batch) == self.batch_size or not self.drop_last:
                     yield batch
 
     def __len__(self):
         if self.drop_last:
-            return sum(len(group) // self.effective_batch_size for group in self.groups)
-        return sum(math.ceil(len(group) / self.effective_batch_size) for group in self.groups)
+            return sum(len(group) // self.batch_size for group in self.groups)
+        return sum(math.ceil(len(group) / self.batch_size) for group in self.groups)

@@ -63,12 +63,12 @@ class CausalMaskedTransformer(nn.Module):
 
 		self.apply(self._init_weights)
 
-		self.register_buffer(
+		"""self.register_buffer(
 			"causal_mask",
 			torch.triu(
 				torch.ones(context_size + 1, context_size + 1, dtype=torch.bool),diagonal=1
 			)
-		)
+		)"""
 
 	def forward(self, X):
 		if self.use_checkpointing:

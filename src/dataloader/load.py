@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 NUM_CHANNELS = 9
 NUM_PATIENT_TOKENS = 7
+MASK_CHANNEL = NUM_CHANNELS + 1  # Runtime channel after the source/target marker.
 TIME_SCALE = (60 * 60 * 24 * 365) * 10
 # Event and patient tensors contain raw epoch seconds until ``swap`` scales
 # their time channels.  Keep this cutoff in the same units as those tensors.
@@ -23,18 +24,12 @@ from .helper import NegativeSampler, PatientRepository
 
 class PatientEventsDataset(Dataset):
     def __init__(self, path, context_size, shuffle=True,
-            poison_fraction=[0.1, 0.3], threads = 1, lazy_index = False):
+            poison_fraction=[0.1, 0.3], mask_rate=0.15, threads = 1, lazy_index = False):
         self.context_size = context_size
         self.lazy_index = lazy_index
         self.shuffle = shuffle
         self.poison_fraction = poison_fraction
-        self.swap_stats = {
-            "requested": 0,
-            "matched": 0,
-            "no_op": 0,
-        }
-        self.swap_event_counts = defaultdict(int)
-        self.swap_event_no_op_counts = defaultdict(int)
+        self.mask_rate = mask_rate
 
         self.repository = PatientRepository(base_path=path, num_channels=NUM_CHANNELS, threads=threads, lazy_index=lazy_index)
         #self.sampler = NegativeSampler(max_poison_fractions=max_poison_fractions, num_patient_tokens=NUM_PATIENT_TOKENS)
@@ -103,54 +98,6 @@ class PatientEventsDataset(Dataset):
 
         return num_swap
 
-    @staticmethod
-    def _is_noop_replacement(pos_event_tokens, neg_event_tokens, target_index, donor_index):
-        """Return whether the replacement payload is unchanged.
-
-        Treat paired NaNs as equal so missing numeric values count as an
-        unchanged value rather than as a replacement.
-        """
-        positive = pos_event_tokens[list(REPLACED_CHANNELS), target_index]
-        donor = neg_event_tokens[list(REPLACED_CHANNELS), donor_index]
-        equal = (positive == donor) | (torch.isnan(positive) & torch.isnan(donor))
-        return bool(equal.all())
-
-    def reset_swap_stats(self):
-        """Reset cumulative swap instrumentation counters."""
-        for key in self.swap_stats:
-            self.swap_stats[key] = 0
-        self.swap_event_counts.clear()
-        self.swap_event_no_op_counts.clear()
-
-    def get_swap_stats(self):
-        """Return cumulative swap counts and the observed no-op rate."""
-        stats = dict(self.swap_stats)
-        stats["no_op_rate"] = (
-            stats["no_op"] / stats["matched"] if stats["matched"] else 0.0
-        )
-        stats["match_rate"] = (
-            stats["matched"] / stats["requested"] if stats["requested"] else 0.0
-        )
-        stats["event_ix_counts"] = dict(sorted(self.swap_event_counts.items()))
-        stats["event_ix_distribution"] = {
-            event_ix: count / stats["matched"]
-            for event_ix, count in stats["event_ix_counts"].items()
-        } if stats["matched"] else {}
-        stats["event_ix_no_op_counts"] = dict(
-            sorted(self.swap_event_no_op_counts.items())
-        )
-        effective_count = stats["matched"] - stats["no_op"]
-        stats["effective_event_ix_distribution"] = {
-            event_ix: (
-                stats["event_ix_counts"].get(event_ix, 0)
-                - stats["event_ix_no_op_counts"].get(event_ix, 0)
-            ) / effective_count
-            for event_ix in stats["event_ix_counts"]
-            if stats["event_ix_counts"].get(event_ix, 0)
-            - stats["event_ix_no_op_counts"].get(event_ix, 0) > 0
-        } if effective_count else {}
-        return stats
-
     def _match_event_indices(self, pos_event_tokens, neg_event_tokens, num_swap):
         """Match donor events to unique positive events of the same type."""
         pos_types = pos_event_tokens[8].tolist()
@@ -207,6 +154,15 @@ class PatientEventsDataset(Dataset):
         patient_tokens = torch.cat((patient_tokens, patient_role), dim=0)
         event_tokens = torch.cat((event_tokens, event_role.unsqueeze(0)), dim=0)
         return torch.cat((patient_tokens, event_tokens), dim=1)
+
+    def add_masks(self, pos_tokens, neg_tokens):
+        """Append the same content-mask row to both paired sequences."""
+        token_mask = self.sample_mask(pos_tokens.shape[1])
+        pos_mask = token_mask.to(device=pos_tokens.device, dtype=pos_tokens.dtype)
+        neg_mask = token_mask.to(device=neg_tokens.device, dtype=neg_tokens.dtype)
+        pos_tokens = torch.cat((pos_tokens, pos_mask.unsqueeze(0)), dim=0)
+        neg_tokens = torch.cat((neg_tokens, neg_mask.unsqueeze(0)), dim=0)
+        return pos_tokens, neg_tokens
 
     def enforce_context_size(self, tokens):
         max_events = self.context_size - NUM_PATIENT_TOKENS
@@ -265,6 +221,14 @@ class PatientEventsDataset(Dataset):
         padded_labels[:seq_len] = labels
         return padded_tokens, padding_mask, padded_labels
 
+    def sample_mask(self, sequence_length):
+        """Sample one content-mask signature for both members of a pair."""
+        if self.mode != "train" or self.mask_rate <= 0:
+            return torch.zeros(sequence_length, dtype=torch.bool)
+        if self.mask_rate >= 1:
+            return torch.ones(sequence_length, dtype=torch.bool)
+        return torch.rand(sequence_length) < self.mask_rate
+
     def scale_time_columns(self, tokens):
         tokens[3:6] = tokens[3:6] / TIME_SCALE  # Normalize time columns
         return tokens
@@ -273,31 +237,23 @@ class PatientEventsDataset(Dataset):
         pos_event_tokens = self.enforce_context_size(pos_event_tokens)
         neg_tokens = pos_event_tokens.clone()
         num_swap = self.get_num_swap(pos_event_tokens, neg_event_tokens)
-        self.swap_stats["requested"] += num_swap
 
         replacement_mask = torch.zeros(pos_event_tokens.shape[1])
         matches = self._match_event_indices(pos_event_tokens, neg_event_tokens, num_swap)
-        self.swap_stats["matched"] += len(matches)
 
         for target_index, donor_index in matches:
-            event_ix = int(pos_event_tokens[8, target_index].item())
-            self.swap_event_counts[event_ix] += 1
-            if self._is_noop_replacement(
-                pos_event_tokens, neg_event_tokens, target_index, donor_index
-            ):
-                self.swap_stats["no_op"] += 1
-                self.swap_event_no_op_counts[event_ix] += 1
             neg_tokens[list(REPLACED_CHANNELS), target_index] = neg_event_tokens[list(REPLACED_CHANNELS), donor_index]
             replacement_mask[target_index] = 1.0
-
-        pos = self._add_role_row(pos_patient_tokens, pos_event_tokens, replacement_mask)
-        neg = self._add_role_row(pos_patient_tokens, neg_tokens, replacement_mask)
 
         replacement_mask = torch.cat((torch.zeros(NUM_PATIENT_TOKENS), replacement_mask), dim=0)
         #neg_labels = self._prefix_mask(replacement_mask)
         neg_labels = torch.zeros_like(replacement_mask)
         pos_labels = torch.ones_like(neg_labels)
 
+        pos = self._add_role_row(pos_patient_tokens, pos_event_tokens, replacement_mask[NUM_PATIENT_TOKENS:])
+        neg = self._add_role_row(pos_patient_tokens, neg_tokens, replacement_mask[NUM_PATIENT_TOKENS:])
+        pos, neg = self.add_masks(pos, neg)
+        
         pos, pos_padding_mask, pos_labels = self.pad_to_context_size(pos, pos_labels)
         pos = self.scale_time_columns(pos)
         neg, neg_padding_mask, neg_labels = self.pad_to_context_size(neg, neg_labels)

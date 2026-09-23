@@ -28,11 +28,12 @@ class NumericProjectionWithFrequency(nn.Module):
             freq_bands = (100 * torch.pi) / PERIODS_IN_YEARS
         else:
             freq_bands = (2.0 ** torch.arange(-num_frequencies//2, num_frequencies//2, dtype=torch.float32)) * torch.pi
+        frequency_count = len(freq_bands)
         self.register_buffer("frequencies", freq_bands)
 
         self.projection = nn.Sequential(
-            nn.Linear(input_dim * (1 + 2 * num_frequencies), output_dim),
-            nn.ReLU(),
+            nn.Linear(input_dim * (1 + 2 * frequency_count), output_dim),
+            nn.GELU(),
             nn.Linear(output_dim, output_dim)
         )
         self.reset_parameters()
@@ -47,6 +48,7 @@ class NumericProjectionWithFrequency(nn.Module):
     def reset_parameters(self):
         for m in self.projection:
             if isinstance(m, nn.Linear):
-                nn.init.kaiming_uniform_(m.weight, nonlinearity='relu')
+                # There is no exact Kaiming gain for GELU.
+                nn.init.xavier_uniform_(m.weight)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)

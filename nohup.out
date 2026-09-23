@@ -2870,3 +2870,329 @@ In file included from /usr/include/bits/libc-header-start.h:33,
 [I 2026-09-21 16:02:06.019 ServerApp] Saving file at /train-Copy1.ipynb
 [I 2026-09-21 16:04:14.536 ServerApp] Kernel shutdown: 5fe8054e-fdf3-49df-a07d-e6cc82291d7c
 [I 2026-09-21 17:45:33.933 ServerApp] Starting buffering for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:ad90b9e8-1f1f-4047-a041-e27eef2c05a5
+[I 2026-09-22 13:46:53.705 ServerApp] 302 GET / (@::1) 0.26ms
+[I 2026-09-22 13:46:55.518 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 13:46:55.522 ServerApp] Discarding 81726 buffered messages for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:ad90b9e8-1f1f-4047-a041-e27eef2c05a5
+[I 2026-09-22 15:22:17.272 ServerApp] Starting buffering for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:b1726253-6ce5-4118-9853-d2650ca0ff6f
+[I 2026-09-22 15:42:00.683 ServerApp] 302 GET / (@::1) 0.19ms
+[I 2026-09-22 15:42:02.525 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 15:42:02.526 ServerApp] Discarding 1348 buffered messages for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:b1726253-6ce5-4118-9853-d2650ca0ff6f
+[I 2026-09-22 15:42:04.886 ServerApp] Starting buffering for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:2b34502c-a80f-4b38-ace1-075886c4fbe7
+[I 2026-09-22 15:42:05.076 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 15:42:05.077 ServerApp] Restoring connection for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:2b34502c-a80f-4b38-ace1-075886c4fbe7
+[I 2026-09-22 15:42:05.460 ServerApp] Starting buffering for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:2b34502c-a80f-4b38-ace1-075886c4fbe7
+[I 2026-09-22 19:25:50.723 ServerApp] 302 GET / (@::1) 1.19ms
+[I 2026-09-22 19:25:53.025 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 19:25:53.030 ServerApp] Discarding 15277 buffered messages for 0da0cd1d-c03c-4f32-957d-15478a8a8bb3:2b34502c-a80f-4b38-ace1-075886c4fbe7
+[I 2026-09-22 19:28:10.277 ServerApp] 302 GET / (@::1) 0.18ms
+[I 2026-09-22 19:28:12.764 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 19:28:19.605 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 19:28:21.626 ServerApp] Connecting to kernel 0da0cd1d-c03c-4f32-957d-15478a8a8bb3.
+[I 2026-09-22 19:28:25.213 ServerApp] Kernel shutdown: 0da0cd1d-c03c-4f32-957d-15478a8a8bb3
+[I 2026-09-22 19:29:21.520 ServerApp] Kernel started: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:29:22.137 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:29:22.407 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:29:22.596 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:47:44.737 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:47:44.825 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:47:44.938 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:47:44.938 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:48:22.479 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 19:50:23.465 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 19:52:24.329 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 19:52:42.612 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:52:42.741 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:52:42.899 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:52:42.899 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:53:37.815 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:53:37.888 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:53:38.007 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:53:38.007 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:54:25.256 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 19:54:51.557 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:54:51.682 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:54:51.799 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:54:51.799 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:54:51.801 ServerApp] Replaying 1 buffered messages
+[I 2026-09-22 19:56:07.607 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:56:07.717 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:56:07.813 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:56:07.813 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:56:26.011 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 19:57:09.353 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:57:09.427 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:57:09.569 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:57:09.569 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:57:09.571 ServerApp] Replaying 1 buffered messages
+[I 2026-09-22 19:58:26.811 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 19:58:28.218 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:58:28.524 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:58:28.621 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:58:28.621 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:59:21.690 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:59:21.838 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:59:21.981 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:59:21.981 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:59:30.562 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:59:30.635 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:59:30.779 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:59:30.779 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:59:40.269 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 19:59:40.340 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 19:59:40.483 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 19:59:40.483 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:00:18.611 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:00:18.683 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:00:18.826 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:00:18.826 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:00:27.628 ServerApp] Saving file at /train.ipynb
+[W 2026-09-22 20:00:27.653 ServerApp] /home/baris/database_transformer/.~train.ipynb doesn't exist
+[I 2026-09-22 20:02:28.617 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:04:04.639 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:04:04.711 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:04:04.855 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:04:04.855 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:04:04.857 ServerApp] Replaying 3 buffered messages
+[I 2026-09-22 20:04:50.392 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:04:50.500 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:04:50.597 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:04:50.597 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:06:00.139 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:06:00.217 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:06:00.337 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:06:00.337 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:06:29.543 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:07:00.378 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:07:00.496 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:07:00.591 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:07:00.592 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:08:16.862 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:08:16.939 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:08:17.062 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:08:17.062 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:08:31.075 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:09:50.016 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:09:50.370 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:09:50.523 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:09:50.523 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:10:32.165 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:11:38.882 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:11:38.997 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:11:39.156 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:11:39.156 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:12:32.974 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:14:06.680 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:14:06.762 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:14:06.905 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:14:06.906 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:14:06.908 ServerApp] Replaying 1 buffered messages
+[I 2026-09-22 20:14:33.617 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:14:55.345 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:14:55.421 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:14:55.562 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:14:55.563 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:15:38.442 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:15:38.616 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:15:38.760 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:15:38.760 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:16:34.524 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:16:42.831 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:16:42.906 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:16:43.051 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:16:43.051 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:16:43.053 ServerApp] Replaying 3 buffered messages
+[I 2026-09-22 20:17:25.549 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:17:25.654 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:17:25.798 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:17:25.798 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:17:35.434 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:17:35.506 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:17:35.649 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:17:35.649 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:18:12.602 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:18:12.731 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:18:12.827 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:18:12.827 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:18:12.830 ServerApp] Replaying 1 buffered messages
+[I 2026-09-22 20:18:35.127 ServerApp] Saving file at /train.ipynb
+[W 2026-09-22 20:18:35.149 ServerApp] /home/baris/database_transformer/.~train.ipynb doesn't exist
+[I 2026-09-22 20:19:12.776 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:19:12.981 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:19:13.061 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:19:13.061 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:20:35.718 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:21:18.705 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:21:18.870 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:21:18.987 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:21:18.987 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:22:36.691 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:24:37.338 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:25:26.240 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:25:26.314 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:25:26.456 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:25:26.456 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:26:38.448 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:26:49.355 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:26:49.447 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:26:49.637 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:26:49.637 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:27:27.026 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:27:27.098 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:27:27.241 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:27:27.241 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:28:39.338 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:30:40.263 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:35:30.418 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:35:30.581 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:35:30.728 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:35:30.728 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:36:26.589 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:36:26.668 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:36:26.815 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:36:26.815 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:36:26.817 ServerApp] Replaying 1 buffered messages
+[I 2026-09-22 20:36:41.338 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:36:55.556 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:36:55.629 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:36:55.776 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:36:55.776 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:37:40.319 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 20:37:40.399 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:37:40.547 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 20:37:40.547 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 20:38:41.994 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 20:40:43.727 ServerApp] Saving file at /train.ipynb
+TensorFlow installation not found - running with reduced feature set.
+
+NOTE: Using experimental fast data loading logic. To disable, pass
+    "--load_fast=false" and report issues on GitHub. More details:
+    https://github.com/tensorflow/tensorboard/issues/4784
+
+Serving TensorBoard on localhost; to expose to the network, use a proxy or pass --bind_all
+TensorBoard 2.20.0 at http://localhost:8890/ (Press CTRL+C to quit)
+[I 2026-09-22 22:03:51.806 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 22:03:51.930 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 22:03:52.028 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 22:03:52.028 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 22:03:57.850 ServerApp] Kernel restarted: 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869
+[I 2026-09-22 22:03:57.925 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 22:03:58.072 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-22 22:03:58.072 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-22 22:05:05.854 ServerApp] Saving file at /train.ipynb
+[I 2026-09-22 22:07:07.405 ServerApp] Saving file at /train.ipynb
+[W 2026-09-22 23:06:58.074 ServerApp] WebSocket ping timeout after 119884 ms.
+[W 2026-09-22 23:06:58.528 ServerApp] 
+[W 2026-09-22 23:06:59.187 ServerApp] 
+[W 2026-09-22 23:06:59.851 ServerApp] 
+[W 2026-09-22 23:07:00.511 ServerApp] 
+[W 2026-09-22 23:07:01.175 ServerApp] 
+[W 2026-09-22 23:07:01.834 ServerApp] 
+[W 2026-09-22 23:07:02.496 ServerApp] 
+[I 2026-09-22 23:07:03.076 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-23 03:14:48.785 ServerApp] 302 GET / (@::1) 0.21ms
+[I 2026-09-23 03:14:51.167 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-23 03:14:51.178 ServerApp] Discarding 22385 buffered messages for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:e8deb0b2-7aca-4ae4-91ea-64fb7c66b449
+[I 2026-09-23 03:14:52.097 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:a97b4a27-f607-4735-881d-f114eecb9e8f
+[I 2026-09-23 03:14:52.314 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-23 03:14:52.314 ServerApp] Restoring connection for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:a97b4a27-f607-4735-881d-f114eecb9e8f
+[I 2026-09-23 03:14:52.770 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:a97b4a27-f607-4735-881d-f114eecb9e8f
+[I 2026-09-23 15:11:29.047 ServerApp] 302 GET / (@::1) 1.91ms
+[I 2026-09-23 15:11:31.087 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-23 15:11:31.096 ServerApp] Discarding 64718 buffered messages for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:a97b4a27-f607-4735-881d-f114eecb9e8f
+[I 2026-09-23 15:11:36.826 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-23 15:11:37.454 ServerApp] Kernel started: fcf7d8b1-8958-4364-b3fc-13602c8794c1
+[I 2026-09-23 15:11:38.429 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 15:11:38.651 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:ae8b4dca-9f88-43e8-b420-98e53f2d9bd2
+[I 2026-09-23 15:11:38.652 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 15:11:38.813 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 15:11:41.657 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 15:13:37.320 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:14:09.438 ServerApp] Kernel interrupted: fcf7d8b1-8958-4364-b3fc-13602c8794c1
+[I 2026-09-23 15:15:38.074 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:17:38.926 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:19:39.626 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:21:03.282 ServerApp] Kernel restarted: fcf7d8b1-8958-4364-b3fc-13602c8794c1
+[I 2026-09-23 15:21:03.471 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:c05580f4-fe88-4e9a-a602-1ded7c432062
+[I 2026-09-23 15:21:03.632 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 15:21:03.632 ServerApp] Restoring connection for fcf7d8b1-8958-4364-b3fc-13602c8794c1:c05580f4-fe88-4e9a-a602-1ded7c432062
+[W 2026-09-23 15:21:08.146 ServerApp] Nudge: attempt 10 on kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1
+[I 2026-09-23 15:21:39.933 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:23:40.192 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:25:40.578 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:27:40.967 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:29:41.433 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:31:41.990 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:33:42.742 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:35:43.195 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:37:43.768 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:39:44.335 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:41:44.942 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:43:45.329 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:45:45.752 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:47:46.858 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:49:48.157 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:51:48.644 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:53:49.151 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:54:36.876 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:56:37.426 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 15:58:38.024 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 16:32:14.201 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:c05580f4-fe88-4e9a-a602-1ded7c432062
+[I 2026-09-23 16:32:14.206 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:fbe02481-8e34-495e-85ed-903961ee5933
+[I 2026-09-23 19:49:04.787 ServerApp] 302 GET / (@::1) 2.47ms
+[I 2026-09-23 19:49:06.911 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-23 19:49:06.921 ServerApp] Discarding 17622 buffered messages for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:fbe02481-8e34-495e-85ed-903961ee5933
+[I 2026-09-23 19:49:07.179 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 19:49:07.397 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:0c4c3774-d54d-491c-9d97-cc6e2ec9b43d
+[I 2026-09-23 19:49:14.804 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 19:49:15.770 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:9e2bb164-8ce7-4389-80dc-f48f3e837b45
+[I 2026-09-23 19:49:15.834 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 19:49:16.133 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:1e7d2a22-95b8-4c73-b3d4-432d8bf15191
+[I 2026-09-23 19:49:16.353 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 19:49:16.839 ServerApp] Kernel started: f0a19386-bb67-416b-ab0b-2e3ecddab437
+[I 2026-09-23 19:49:17.893 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 19:49:18.116 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 19:49:26.471 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 19:59:04.538 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 19:59:17.602 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:01:18.343 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:03:18.971 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:04:47.437 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:06:48.591 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:08:50.016 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:24:51.939 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:26:53.158 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:30:11.856 ServerApp] Starting buffering for f0a19386-bb67-416b-ab0b-2e3ecddab437:e26ccfd3-e6b1-4bc2-ad98-1a0e418c60b1
+[I 2026-09-23 20:30:54.146 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:32:54.666 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:34:55.657 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:42:56.118 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:44:57.298 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:48:58.653 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:51:00.305 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:53:01.360 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 20:55:03.207 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 21:03:05.369 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 21:43:11.700 ServerApp] Saving file at /Untitled.ipynb
+[W 2026-09-23 21:43:11.726 ServerApp] /home/baris/database_transformer/.~Untitled.ipynb doesn't exist
+[I 2026-09-23 21:44:41.230 ServerApp] Connecting to kernel 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869.
+[I 2026-09-23 21:44:41.468 ServerApp] Connecting to kernel fcf7d8b1-8958-4364-b3fc-13602c8794c1.
+[I 2026-09-23 21:44:41.923 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 21:44:42.360 ServerApp] Starting buffering for f0a19386-bb67-416b-ab0b-2e3ecddab437:97a7f9ca-d5b8-4974-a632-2e2edcbac0ea
+[I 2026-09-23 21:44:42.520 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 21:44:51.240 ServerApp] Starting buffering for f0a19386-bb67-416b-ab0b-2e3ecddab437:51df38b0-013a-4478-bdf9-f8d6a8f61de9
+[I 2026-09-23 21:45:13.212 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 21:45:18.088 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 21:45:18.586 ServerApp] Starting buffering for f0a19386-bb67-416b-ab0b-2e3ecddab437:db728608-a147-4d95-8d32-a87842a6bbf5
+[I 2026-09-23 21:45:19.666 ServerApp] Connecting to kernel f0a19386-bb67-416b-ab0b-2e3ecddab437.
+[I 2026-09-23 21:47:14.313 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 21:49:15.123 ServerApp] Saving file at /Untitled.ipynb
+[W 2026-09-23 21:49:15.150 ServerApp] /home/baris/database_transformer/.~Untitled.ipynb doesn't exist
+[I 2026-09-23 21:51:16.741 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 21:53:18.098 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 22:01:19.140 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 22:33:24.493 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 23:03:31.827 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-23 23:05:33.359 ServerApp] Saving file at /Untitled.ipynb
+[I 2026-09-24 00:44:18.027 ServerApp] Starting buffering for 7af7f2d7-09b4-4931-a7e9-b28ec6f2b869:fff153ef-5c63-4462-bd19-6b751c06e640
+[I 2026-09-24 00:44:19.414 ServerApp] Starting buffering for f0a19386-bb67-416b-ab0b-2e3ecddab437:846b308d-89d5-4005-a029-c5667d5fd341
+[I 2026-09-24 00:44:20.863 ServerApp] Starting buffering for fcf7d8b1-8958-4364-b3fc-13602c8794c1:8980a6fa-dccc-4dc8-a9cb-3333a0c414ae

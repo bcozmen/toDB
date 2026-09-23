@@ -51,8 +51,11 @@ class PatientRepository:
 
     def patient_to_tensor(self, patient):
         patient_tokens = torch.from_numpy(
-            np.stack([patient[f"patient_token_{i}"] for i in range(self.num_channels)])
-        ).to(dtype=torch.float32)
+            np.asarray(
+                [patient[f"patient_token_{i}"] for i in range(self.num_channels)],
+                dtype=np.float32,
+            )
+        )
         return patient_tokens  # Add a new dimension for concatenation with event tokens
 
     def fetch_event_file_groups(self, mode: str) -> list[list[int]]:
@@ -95,6 +98,19 @@ class PatientRepository:
 
         return [self._patient_cache[i] for i in indices]
 
+    def fetch_events_by_patients(self, mode: str, patient_data: dict) -> list[dict]:
+        """Fetches all events for a given patient_id."""
+        path = f"{self.base_path}/{mode}/{patient_data['event_file']}"
+        query = f"""
+            SELECT *
+            FROM read_parquet('{path}')
+            WHERE patient_id = ?
+            ORDER BY "index"
+        """
+        res = self._get_connection().execute(query, (patient_data["patient_id"],))
+        cols = [col[0] for col in res.description]
+        return [dict(zip(cols, row)) for row in res.fetchall()]
+        
 
     def fetch_events_by_patients_vectorized(self, mode: str, patient_data: list[dict]) -> dict[int, torch.Tensor]:
         """Fetch and group patient events using DuckDB/NumPy vectorized operations."""

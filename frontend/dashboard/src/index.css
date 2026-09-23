@@ -1,0 +1,33 @@
+/* src/index.css */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #111;
+  font-family: Roboto, sans-serif;
+}
+
+.lm_close, .lm_close_tab, .lm_popout {
+  display: none !important;
+}
+
+
+.App-header {
+  display: flex;         /* Required for align-items to work */
+  align-items: center;   /* Centers content vertically */
+  text-align: left;    /* Aligns content to the left horizontally */
+  height: 50px;
+  padding-left: 30px;
+
+  background-color: #12350c;
+  color: white;
+
+  border-bottom: 2px solid #252525;
+  
+}
+
+.react-flow__attribution {
+  display: none;
+}
