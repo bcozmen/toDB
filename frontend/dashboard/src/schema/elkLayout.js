@@ -11,18 +11,20 @@ export const getLayoutedElements = async (nodes, edges, options = {}) => {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': isHorizontal ? 'RIGHT' : 'DOWN',
-      'elk.spacing.nodeNode': '24', // Keep collapsed tables close together
-      'elk.layered.spacing.nodeNodeBetweenLayers': '50', // Leave room for expanded tables
-      'elk.edgeRouting': 'ORTHOGONAL', // Crisp 90-degree lines
+      'elk.spacing.nodeNode': '36',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+      'elk.edgeRouting': 'ORTHOGONAL',
     },
-    children: nodes.map((node) => ({
-      id: node.id,
-      // Pass estimated dimensions to ELK so it calculates spacing accurately
-      width: node.measured?.width || 220,
-      height: node.data.expanded
-        ? 40 + (node.data.columns?.length || 0) * 28
-        : 40,
-    })),
+    children: nodes.map((node) => {
+      const isExpanded = Boolean(node.data?.expanded);
+      const colCount = node.data?.columns?.length || 0;
+      const height = isExpanded ? 44 + colCount * 28 + 12 : 44;
+      return {
+        id: node.id,
+        width: node.measured?.width || 260,
+        height,
+      };
+    }),
     edges: edges.map((edge) => ({
       id: edge.id,
       sources: [edge.source],
@@ -37,8 +39,8 @@ export const getLayoutedElements = async (nodes, edges, options = {}) => {
     return {
       ...node,
       position: {
-        x: elkNode?.x ?? 0,
-        y: elkNode?.y ?? 0,
+        x: elkNode?.x ?? node.position?.x ?? 0,
+        y: elkNode?.y ?? node.position?.y ?? 0,
       },
     };
   });

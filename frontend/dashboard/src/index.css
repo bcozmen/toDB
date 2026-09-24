@@ -18,7 +18,7 @@ html, body, #root {
   display: flex;         /* Required for align-items to work */
   align-items: center;   /* Centers content vertically */
   text-align: left;    /* Aligns content to the left horizontally */
-  height: 50px;
+  height: 25px;
   padding-left: 30px;
 
   background-color: #12350c;

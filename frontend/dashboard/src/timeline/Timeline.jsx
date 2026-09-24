@@ -1,86 +1,74 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import '@shoelace-style/shoelace/dist/components/card/card.js';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePatientStore } from '../patient/patientStore';
+import { COLORS, EVENT_LABELS } from './timelineConstants';
 import './timeline.css';
-
-export const EVENT_TABLES = [
-  ['encounters', 'encounter'],
-  ['conditions', 'condition'],
-  ['medications', 'medication'],
-  ['procedures', 'procedure'],
-  ['observations', 'observation'],
-  ['immunizations', 'immunization'],
-  ['allergies', 'allergy'],
-  ['careplans', 'careplan'],
-  ['imaging_studies', 'imaging_study'],
-];
-
-export const COLORS = {
-  encounter: '#62c5a2',
-  condition: '#ef8f8f',
-  medication: '#d9a85f',
-  procedure: '#9f9bea',
-  observation: '#65b6d9',
-  immunization: '#d483bc',
-  allergy: '#e57b60',
-  careplan: '#b2c96b',
-  imaging_study: '#e3c76d',
-};
 
 const DAY = 86400;
 const YEAR = 365 * DAY;
-const TIMELINE_END_PADDING = 240;
-const TIMELINE_SLIDER_INSET = 7;
-const DEFAULT_EVENT_COLOR = '#8ca0aa';
+const CARD_WIDTH = 210;
+const LANE_HEIGHT = 86;
+const TRACK_PADDING_X = 48;
 
 function toSeconds(value) {
   if (value == null || value === '') return null;
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-
   const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? null : parsed / 1000;
+  return Number.isNaN(parsed) ? null : Math.floor(parsed / 1000);
 }
 
 function formatDate(value) {
   const time = toSeconds(value);
-  return time == null
-    ? 'Unknown'
-    : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(time * 1000));
+  if (time == null) return '—';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(time * 1000));
+}
+
+function formatDateTime(value) {
+  const time = toSeconds(value);
+  if (time == null) return '—';
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(time * 1000));
 }
 
 function toDateInputValue(value) {
   const time = toSeconds(value);
   if (time == null) return '';
-
   const date = new Date(time * 1000);
   return [
-    date.getUTCFullYear(),
-    String(date.getUTCMonth() + 1).padStart(2, '0'),
-    String(date.getUTCDate()).padStart(2, '0'),
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
   ].join('-');
 }
 
 function describeCode(dictionary, code) {
   if (code == null) return 'Unknown code';
-
   const values = dictionary?.code ?? dictionary;
   if (Array.isArray(values)) {
     const match = values.find((item) => item?.code === code || item?.value === code);
     return match?.description ?? match?.label ?? String(code);
   }
-
   if (values && typeof values === 'object') {
     const match = values[code];
     return typeof match === 'string'
       ? match
       : match?.description ?? match?.label ?? String(code);
   }
-
   return String(code);
 }
 
 function eventDictionaryKey(eventType) {
-  return eventType === 'imaging_study' ? 'imaging_studies' : `${eventType}s`;
+  if (eventType === 'imaging_study') return 'imaging_studies';
+  if (eventType.endsWith('s')) return eventType;
+  return `${eventType}s`;
 }
 
 function groupEvents(events) {
@@ -91,21 +79,23 @@ function groupEvents(events) {
     .filter((event) => event.event_type === 'encounter')
     .forEach((encounter) => {
       const id = String(encounter.encounter_id ?? encounter.id ?? encounter.start_time);
-      groups.set(id, { encounter, events: [] });
+      groups.set(id, { id, encounter, events: [] });
     });
 
   rows
     .filter((event) => event.event_type !== 'encounter')
     .forEach((event) => {
       const id = String(event.encounter_id ?? 'unassigned');
-      if (!groups.has(id)) groups.set(id, { encounter: null, events: [] });
+      if (!groups.has(id)) {
+        groups.set(id, { id, encounter: null, events: [] });
+      }
       groups.get(id).events.push(event);
     });
 
-  return [...groups.values()].sort((left, right) => {
-    const leftTime = toSeconds(left.encounter?.start_time) ?? toSeconds(left.events[0]?.start_time) ?? 0;
-    const rightTime = toSeconds(right.encounter?.start_time) ?? toSeconds(right.events[0]?.start_time) ?? 0;
-    return leftTime - rightTime;
+  return [...groups.values()].sort((a, b) => {
+    const aTime = toSeconds(a.encounter?.start_time) ?? toSeconds(a.events[0]?.start_time) ?? 0;
+    const bTime = toSeconds(b.encounter?.start_time) ?? toSeconds(b.events[0]?.start_time) ?? 0;
+    return aTime - bTime;
   });
 }
 
@@ -115,9 +105,10 @@ function createTimeScale(minTime, maxTime, encounters) {
     return time == null ? [] : [time];
   });
   const anchors = [...new Set([minTime, ...encounterTimes, maxTime])].sort((a, b) => a - b);
-  const weights = anchors.slice(1).map((time, index) => (
-    Math.max(0.45, Math.min(2, (time - anchors[index]) / YEAR))
-  ));
+  const weights = anchors.slice(1).map((time, index) => {
+    const span = (time - anchors[index]) / YEAR;
+    return Math.max(0.45, Math.min(2.5, span));
+  });
   const total = weights.reduce((sum, weight) => sum + weight, 0) || 1;
   const offsets = weights.reduce((result, weight) => {
     result.push(result.at(-1) + weight);
@@ -125,276 +116,549 @@ function createTimeScale(minTime, maxTime, encounters) {
   }, [0]);
 
   function coordinate(value) {
-    const boundedTime = Math.max(anchors[0], Math.min(anchors.at(-1), toSeconds(value) ?? anchors[0]));
-    const nextAnchor = anchors.findIndex((anchor) => anchor > boundedTime);
-    const index = Math.max(0, Math.min(anchors.length - 2, nextAnchor - 1));
+    const t = toSeconds(value);
+    if (t == null) return 0;
+    const bounded = Math.max(anchors[0], Math.min(anchors.at(-1), t));
+    const nextAnchor = anchors.findIndex((anchor) => anchor > bounded);
+    if (nextAnchor === -1) return total;
+    const index = Math.max(0, nextAnchor - 1);
     const span = anchors[index + 1] - anchors[index];
-    const fraction = span > 0 ? (boundedTime - anchors[index]) / span : 0;
+    const fraction = span > 0 ? (bounded - anchors[index]) / span : 0;
     return offsets[index] + fraction * (offsets[index + 1] - offsets[index]);
   }
 
-  function valueAt(value) {
-    const boundedCoordinate = Math.max(0, Math.min(total, value));
-    const nextOffset = offsets.findIndex((offset) => offset > boundedCoordinate);
-    const index = Math.max(0, Math.min(offsets.length - 2, nextOffset - 1));
+  function valueAt(coord) {
+    const bounded = Math.max(0, Math.min(total, coord));
+    const nextOffset = offsets.findIndex((offset) => offset > bounded);
+    if (nextOffset === -1) return anchors.at(-1);
+    const index = Math.max(0, nextOffset - 1);
     const span = offsets[index + 1] - offsets[index];
-    const fraction = span > 0 ? (boundedCoordinate - offsets[index]) / span : 0;
+    const fraction = span > 0 ? (bounded - offsets[index]) / span : 0;
     return anchors[index] + fraction * (anchors[index + 1] - anchors[index]);
   }
 
-  return { coordinate, valueAt, total };
+  return { coordinate, valueAt, total, minTime, maxTime };
 }
 
-function getGroupId(encounter, events, index) {
-  return String(encounter?.encounter_id ?? events[0]?.encounter_id ?? index);
-}
-
-function EventCard({ event, dictionary, top, color, isFuture }) {
-  const code = event.code ?? event.bodysite_code;
-  const description = describeCode(dictionary, code);
-
-  return (
-    <sl-card
-      className={`timeline-card event-card ${isFuture ? 'is-future' : ''}`}
-      style={{ top: `${top}px`, '--event-color': color }}
-    >
-      <div className="timeline-card-kind">{event.event_type}</div>
-      <strong>{formatDate(event.start_time)}</strong>
-      <span>{formatDate(event.stop_time)}</span>
-      <span><b>Code:</b> {code ?? 'Unknown'}</span>
-      <span className="timeline-description" title={description}>{description}</span>
-      <span><b>Value:</b> {event.value ?? '—'} {event.units ?? ''}</span>
-    </sl-card>
-  );
-}
-
-function EncounterCard({ encounter, events, cutoff, expanded, onToggle, position, width, schema }) {
-  const item = encounter ?? events[0];
-  const type = encounter?.event_type ?? 'encounter';
-  const isFuture = (toSeconds(item?.start_time) ?? 0) > cutoff;
-
-  return (
-    <sl-card
-      className={`encounter-card ${expanded ? 'is-open' : ''} ${isFuture ? 'is-future' : ''}`}
-      role="button"
-      tabIndex="0"
-      onClick={onToggle}
-      onKeyDown={(event) => {
-        if (event.key !== 'Enter' && event.key !== ' ') return;
-        event.preventDefault();
-        onToggle();
-      }}
-      style={{
-        left: `${position(item?.start_time)}%`,
-        width: `${width(item?.start_time, encounter?.stop_time)}%`,
-        '--event-color': COLORS[type],
-      }}
-    >
-      <span className="card-type">ENCOUNTER</span>
-      <strong>{formatDate(item?.start_time)}</strong>
-      <span>{formatDate(encounter?.stop_time)}</span>
-      <span>Code: {item?.code ?? 'Unknown'}</span>
-      <span className="timeline-description">
-        {describeCode(schema?.encounters, item?.code)}
-      </span>
-    </sl-card>
-  );
-}
-
-function EventGroup({ encounter, events, index, cutoff, schema, expanded, position }) {
-  if (!expanded) return null;
-
-  const groupId = getGroupId(encounter, events, index);
-  const start = encounter?.start_time ?? events[0]?.start_time;
-
-  return (
-    <div className="event-group" style={{ left: `${position(start)}%` }}>
-      {events.map((event, eventIndex) => (
-        <EventCard
-          key={`${groupId}-${event.event_type}-${event.index ?? eventIndex}`}
-          event={event}
-          dictionary={schema?.[eventDictionaryKey(event.event_type)]}
-          top={eventIndex * 132}
-          color={COLORS[event.event_type] ?? DEFAULT_EVENT_COLOR}
-          isFuture={(toSeconds(event.start_time) ?? 0) > cutoff}
-        />
-      ))}
-    </div>
-  );
-}
-
-function TimelineHeader({ encounterCount, eventCount, cutoff, onCutoffChange }) {
-  return (
-    <header className="timeline-header">
-      <div>
-        <span className="timeline-kicker">EVENT TIMELINE</span>
-        <h2>{encounterCount} encounters · {eventCount} events</h2>
-      </div>
-      <label>
-        Cut-off date
-        <input
-          type="date"
-          value={toDateInputValue(cutoff)}
-          onChange={(event) => {
-            if (!event.target.value) return;
-            onCutoffChange(Date.parse(`${event.target.value}T00:00:00Z`) / 1000);
-          }}
-        />
-      </label>
-    </header>
-  );
-}
-
-function TimelineRuler({ minTime, maxTime, cutoff, scale, sliderValue, linePosition, lineHeight, onCutoffChange }) {
-  return (
-    <div className="timeline-ruler" aria-label="Timeline cutoff control">
-      <div className="timeline-ruler-labels">
-        <span>{formatDate(minTime)}</span>
-        <span>Birth</span>
-        <span>{formatDate(maxTime)}</span>
-      </div>
-      <input
-        className="timeline-cutoff-slider"
-        type="range"
-        min="0"
-        max={scale.total}
-        step="0.01"
-        value={sliderValue}
-        onChange={(event) => onCutoffChange(scale.valueAt(Number(event.target.value)))}
-        aria-label="Timeline cut-off date"
-      />
-      <div className="timeline-cutoff-line" style={{ left: `${linePosition}px`, height: `${lineHeight}px` }}>
-        <span>{formatDate(cutoff)}</span>
-      </div>
-    </div>
-  );
+function getEventCounts(childEvents) {
+  const counts = {};
+  for (const ev of childEvents) {
+    const type = ev.event_type || 'other';
+    counts[type] = (counts[type] || 0) + 1;
+  }
+  return counts;
 }
 
 export default function Timeline() {
   const { patient, events, schema } = usePatientStore();
-  const [expanded, setExpanded] = useState(() => new Set());
+  const [selectedId, setSelectedId] = useState(null);
+  const [filterCategory, setFilterCategory] = useState('all');
   const [now] = useState(() => Math.floor(Date.now() / 1000));
   const [cutoff, setCutoff] = useState(now);
-  const rows = useMemo(() => (Array.isArray(events) ? events : []), [events]);
+  const [inspectorHeight, setInspectorHeight] = useState(260);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const trackRef = useRef(null);
 
-  const eventTimes = useMemo(() => rows
-    .flatMap((event) => [toSeconds(event.start_time), toSeconds(event.stop_time)])
-    .filter((time) => time != null)
-    .sort((a, b) => a - b), [rows]);
-  const lastEvent = eventTimes.at(-1) ?? now;
-  const defaultCutoff = Math.min(lastEvent, now);
+  const rows = useMemo(() => (Array.isArray(events) ? events : []), [events]);
+  const encounters = useMemo(() => groupEvents(rows), [rows]);
+
+  const eventTimes = useMemo(() => (
+    rows
+      .flatMap((e) => [toSeconds(e.start_time), toSeconds(e.stop_time)])
+      .filter((t) => t != null)
+      .sort((a, b) => a - b)
+  ), [rows]);
+
+  const { minTime, maxTime, defaultCutoff } = useMemo(() => {
+    const birth = toSeconds(patient?.patient_start_time);
+    const firstEv = eventTimes[0];
+    const earliest = birth ?? firstEv ?? now - YEAR;
+    const lastEv = eventTimes.at(-1);
+    const latest = Math.max(earliest + DAY, lastEv ?? now);
+    const initialCutoff = Math.min(latest, now);
+    return { minTime: earliest, maxTime: latest, defaultCutoff: initialCutoff };
+  }, [patient?.patient_start_time, eventTimes, now]);
 
   useEffect(() => {
     setCutoff(defaultCutoff);
-    setExpanded(new Set());
-  }, [patient?.patient_id, defaultCutoff]);
+    if (encounters.length > 0) {
+      const pastEncounters = encounters.filter((e) => {
+        const t = toSeconds(e.encounter?.start_time ?? e.events[0]?.start_time) ?? 0;
+        return t <= defaultCutoff;
+      });
+      const target = pastEncounters.at(-1) ?? encounters.at(-1);
+      setSelectedId(target?.id ?? null);
+    }
+  }, [patient?.patient_id, defaultCutoff, encounters]);
 
-  const encounters = useMemo(() => groupEvents(rows), [rows]);
-  const { minTime, maxTime } = useMemo(() => {
-    const firstEvent = eventTimes[0] ?? toSeconds(patient?.patient_start_time) ?? 0;
-    const lastEventTime = eventTimes.at(-1)
-      ?? toSeconds(patient?.patient_stop_time)
-      ?? now;
-    return { minTime: firstEvent, maxTime: Math.max(lastEventTime, firstEvent + DAY) };
-  }, [eventTimes, now, patient]);
   const timeScale = useMemo(
     () => createTimeScale(minTime, maxTime, encounters),
     [minTime, maxTime, encounters],
   );
 
-  const timelineWidth = Math.max(1400, timeScale.total * 300);
-  const position = (value) => (
-    timeScale.coordinate(value) / timeScale.total
-    * timelineWidth / (timelineWidth + TIMELINE_END_PADDING) * 100
-  );
-  const linePosition = (value) => (
-    TIMELINE_SLIDER_INSET
-    + timeScale.coordinate(value) / timeScale.total
-    * (timelineWidth - TIMELINE_SLIDER_INSET * 2)
-  );
-  const widthBetween = (start, stop) => Math.max(3, position(stop ?? start) - position(start));
-  const toggle = (id) => setExpanded((current) => {
-    const next = new Set(current);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    return next;
-  });
-  const expandedHeight = Math.max(0, ...encounters.map(({ encounter, events: childEvents }, index) => (
-    expanded.has(getGroupId(encounter, childEvents, index))
-      ? 28 + childEvents.length * 132
-      : 0
-  )));
+  const trackWidth = Math.max(1200, Math.round(timeScale.total * 220));
+  const contentWidth = trackWidth - TRACK_PADDING_X * 2;
 
-  if (!patient) return <div className="timeline-empty">Waiting for a patient…</div>;
+  const timeToX = useCallback((value) => {
+    const coord = timeScale.coordinate(value);
+    return TRACK_PADDING_X + (coord / timeScale.total) * contentWidth;
+  }, [timeScale, contentWidth]);
+
+  const xToTime = useCallback((xPixel) => {
+    const clampedX = Math.max(TRACK_PADDING_X, Math.min(TRACK_PADDING_X + contentWidth, xPixel));
+    const coord = ((clampedX - TRACK_PADDING_X) / contentWidth) * timeScale.total;
+    return Math.round(timeScale.valueAt(coord));
+  }, [timeScale, contentWidth]);
+
+  // Compute collision-free lanes for encounters
+  const { positionedEncounters, numLanes } = useMemo(() => {
+    const laneEnds = [];
+    const items = encounters.map((item) => {
+      const time = toSeconds(item.encounter?.start_time ?? item.events[0]?.start_time) ?? minTime;
+      const x = timeToX(time);
+      let lane = 0;
+      while (lane < laneEnds.length && laneEnds[lane] > x - 12) {
+        lane++;
+      }
+      laneEnds[lane] = x + CARD_WIDTH;
+      return { ...item, x, lane, time };
+    });
+    return { positionedEncounters: items, numLanes: Math.max(1, laneEnds.length) };
+  }, [encounters, timeToX, minTime]);
+
+  const cutoffX = timeToX(cutoff);
+
+  // Year ticks on the ruler
+  const rulerTicks = useMemo(() => {
+    const startYear = new Date(minTime * 1000).getFullYear();
+    const endYear = new Date(maxTime * 1000).getFullYear();
+    const span = endYear - startYear;
+    const step = span > 40 ? 10 : span > 20 ? 5 : span > 8 ? 2 : 1;
+    const ticks = [];
+    for (let y = Math.ceil(startYear / step) * step; y <= endYear; y += step) {
+      const time = Date.UTC(y, 0, 1) / 1000;
+      if (time >= minTime && time <= maxTime) {
+        ticks.push({ year: y, x: timeToX(time) });
+      }
+    }
+    return ticks;
+  }, [minTime, maxTime, timeToX]);
+
+  // Global event counts for legend
+  const globalEventCounts = useMemo(() => {
+    const counts = {};
+    for (const ev of rows) {
+      const type = ev.event_type || 'other';
+      counts[type] = (counts[type] || 0) + 1;
+    }
+    return counts;
+  }, [rows]);
+
+  // Active selected encounter details
+  const selectedGroup = useMemo(
+    () => encounters.find((e) => e.id === selectedId) ?? null,
+    [encounters, selectedId],
+  );
+
+  const selectedChildEvents = useMemo(() => {
+    if (!selectedGroup) return [];
+    if (filterCategory === 'all') return selectedGroup.events;
+    return selectedGroup.events.filter((e) => e.event_type === filterCategory);
+  }, [selectedGroup, filterCategory]);
+
+  // Scrubbing on ruler
+  const handleRulerMouseDown = (e) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const update = (clientX) => {
+      const scrollLeft = trackRef.current?.scrollLeft ?? 0;
+      const x = clientX - rect.left + scrollLeft;
+      setCutoff(xToTime(x));
+    };
+    update(e.clientX);
+
+    const onMouseMove = (moveEvent) => update(moveEvent.clientX);
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  // Drag-to-resize inspector height
+  const handleResizerMouseDown = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startHeight = inspectorHeight;
+
+    const onMouseMove = (moveEvent) => {
+      const deltaY = startY - moveEvent.clientY;
+      const nextHeight = Math.max(130, Math.min(window.innerHeight * 0.75, startHeight + deltaY));
+      setInspectorHeight(nextHeight);
+      setIsMaximized(false);
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const toggleMaximize = () => {
+    if (isMaximized) {
+      setInspectorHeight(260);
+      setIsMaximized(false);
+    } else {
+      setInspectorHeight(440);
+      setIsMaximized(true);
+    }
+  };
+
+  if (!patient) {
+    return <div className="timeline-empty">Waiting for a patient…</div>;
+  }
+
+  const selectedItem = selectedGroup?.encounter ?? selectedGroup?.events[0];
+  const selectedIsFuture = (toSeconds(selectedItem?.start_time) ?? 0) > cutoff;
 
   return (
     <section className="timeline-panel" aria-label="Patient event timeline">
-      <TimelineHeader
-        encounterCount={encounters.length}
-        eventCount={rows.length}
-        cutoff={cutoff}
-        onCutoffChange={setCutoff}
-      />
-      <div className={`timeline-scroll ${expandedHeight > 0 ? 'has-expanded-events' : ''}`}>
+      {/* Top Header */}
+      <header className="tl-header">
+        <div className="tl-header-left">
+          <span className="tl-kicker">PATIENT EVENT TIMELINE</span>
+          <div className="tl-header-title-row">
+            <h2>{encounters.length} Encounters</h2>
+            <span className="tl-dot-sep">·</span>
+            <span className="tl-subcount">{rows.length} Total Events</span>
+            <span className="tl-time-range">
+              ({formatDate(minTime)} – {formatDate(maxTime)})
+            </span>
+          </div>
+        </div>
+
+        {/* Legend Filter Pills */}
+        <div className="tl-legend">
+          {Object.entries(COLORS).map(([type, color]) => {
+            const count = type === 'encounter' ? encounters.length : globalEventCounts[type] || 0;
+            if (count === 0 && type !== 'encounter') return null;
+            const isActive = filterCategory === type;
+            return (
+              <button
+                key={type}
+                type="button"
+                className={`tl-legend-pill ${isActive ? 'is-active' : ''}`}
+                style={{ '--pill-color': color }}
+                onClick={() => setFilterCategory(isActive ? 'all' : type)}
+                title={`Filter by ${EVENT_LABELS[type] || type} (${count})`}
+              >
+                <span className="tl-legend-dot" />
+                <span>{EVENT_LABELS[type] || type}</span>
+                <span className="tl-legend-count">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Cutoff Controls */}
+        <div className="tl-cutoff-controls">
+          <div className="tl-cutoff-input-group">
+            <span className="tl-cutoff-label">Cut-off date:</span>
+            <input
+              type="date"
+              className="tl-date-input"
+              value={toDateInputValue(cutoff)}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                setCutoff(Date.parse(`${e.target.value}T00:00:00Z`) / 1000);
+              }}
+              title="Filter future clinical events beyond this date"
+            />
+          </div>
+          <button
+            type="button"
+            className="tl-btn-reset"
+            onClick={() => setCutoff(maxTime)}
+            title="Set cutoff to latest event"
+          >
+            All Time
+          </button>
+        </div>
+      </header>
+
+      {/* Horizontal Timeline Track */}
+      <div className="tl-track-container" ref={trackRef}>
         <div
-          className="timeline-canvas"
+          className="tl-canvas"
           style={{
-            '--timeline-end-padding': `${TIMELINE_END_PADDING}px`,
-            width: `${timelineWidth + TIMELINE_END_PADDING}px`,
-            height: `${Math.max(300, 238 + expandedHeight)}px`,
+            width: `${trackWidth}px`,
+            minHeight: `${Math.max(220, 110 + numLanes * LANE_HEIGHT)}px`,
           }}
         >
-          <TimelineRuler
-            minTime={minTime}
-            maxTime={maxTime}
-            cutoff={cutoff}
-            scale={timeScale}
-            sliderValue={timeScale.coordinate(cutoff)}
-            linePosition={linePosition(cutoff)}
-            lineHeight={expandedHeight + 220}
-            onCutoffChange={setCutoff}
-          />
-          <div className="timeline-encounter-row">
-            {encounters.map(({ encounter, events: childEvents }, index) => {
-              const id = getGroupId(encounter, childEvents, index);
+          {/* Time Ruler */}
+          <div
+            className="tl-ruler"
+            onMouseDown={handleRulerMouseDown}
+            title="Click or drag to change cutoff date"
+          >
+            <div className="tl-ruler-rail" />
+
+            {/* Birth / Start Marker */}
+            <div className="tl-ruler-special-tick" style={{ left: `${TRACK_PADDING_X}px` }}>
+              <div className="tl-tick-line" />
+              <span className="tl-tick-label">Birth · {formatDate(patient?.patient_start_time)}</span>
+            </div>
+
+            {/* Year Ticks */}
+            {rulerTicks.map(({ year, x }) => (
+              <div key={year} className="tl-ruler-tick" style={{ left: `${x}px` }}>
+                <div className="tl-tick-line" />
+                <span className="tl-tick-label">{year}</span>
+              </div>
+            ))}
+
+            {/* Cutoff Flag on Ruler */}
+            <div className="tl-cutoff-flag" style={{ left: `${cutoffX}px` }}>
+              <span className="tl-cutoff-badge">Cut-off: {formatDate(cutoff)}</span>
+              <div className="tl-cutoff-handle" />
+            </div>
+          </div>
+
+          {/* Full-Height Vertical Cutoff Line */}
+          <div className="tl-cutoff-line" style={{ left: `${cutoffX}px` }} />
+
+          {/* Shaded Future Area */}
+          <div
+            className="tl-future-shading"
+            style={{
+              left: `${cutoffX}px`,
+              width: `${Math.max(0, trackWidth - cutoffX)}px`,
+            }}
+          >
+            <span className="tl-future-watermark">Future (Filtered)</span>
+          </div>
+
+          {/* Encounter Cards Lane */}
+          <div
+            className="tl-encounters-lane"
+            style={{ height: `${numLanes * LANE_HEIGHT + 24}px` }}
+          >
+            {positionedEncounters.map((item) => {
+              const enc = item.encounter;
+              const isSelected = item.id === selectedId;
+              const isFuture = item.time > cutoff;
+              const counts = getEventCounts(item.events);
+              const title = enc
+                ? describeCode(schema?.encounters, enc.code)
+                : 'Outpatient / External Events';
+
               return (
-                <EncounterCard
-                  key={id}
-                  encounter={encounter}
-                  events={childEvents}
-                  cutoff={cutoff}
-                  expanded={expanded.has(id)}
-                  onToggle={() => toggle(id)}
-                  position={position}
-                  width={widthBetween}
-                  schema={schema}
-                />
+                <div
+                  key={item.id}
+                  className={`tl-encounter-card ${isSelected ? 'is-selected' : ''} ${isFuture ? 'is-future' : ''}`}
+                  style={{
+                    left: `${item.x}px`,
+                    top: `${item.lane * LANE_HEIGHT + 10}px`,
+                    width: `${CARD_WIDTH}px`,
+                  }}
+                  onClick={() => setSelectedId(item.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedId(item.id);
+                    }
+                  }}
+                >
+                  <div className="tl-enc-header">
+                    <span className="tl-enc-date">{formatDate(item.time)}</span>
+                    {isFuture && <span className="tl-future-tag">FUTURE</span>}
+                  </div>
+
+                  <strong className="tl-enc-title" title={title}>
+                    {title}
+                  </strong>
+
+                  {enc?.code && (
+                    <span className="tl-enc-code">Code: {enc.code}</span>
+                  )}
+
+                  {/* Child event summary badges */}
+                  <div className="tl-enc-chips">
+                    {Object.entries(counts).map(([type, cnt]) => (
+                      <span
+                        key={type}
+                        className="tl-chip"
+                        style={{ '--chip-color': COLORS[type] || '#71c7aa' }}
+                        title={`${cnt} ${EVENT_LABELS[type] || type}`}
+                      >
+                        {cnt} {type.slice(0, 4)}
+                      </span>
+                    ))}
+                    {item.events.length === 0 && (
+                      <span className="tl-chip tl-chip-muted">0 events</span>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
-          {expandedHeight > 0 && (
-            <div className="timeline-event-row" style={{ minHeight: `${expandedHeight}px` }}>
-              {encounters.map(({ encounter, events: childEvents }, index) => (
-                <EventGroup
-                  key={getGroupId(encounter, childEvents, index)}
-                  encounter={encounter}
-                  events={childEvents}
-                  index={index}
-                  cutoff={cutoff}
-                  schema={schema}
-                  expanded={expanded.has(getGroupId(encounter, childEvents, index))}
-                  position={position}
-                />
-              ))}
-            </div>
-          )}
-          <div className="timeline-axis">
-            <span>{formatDate(minTime)}</span>
-            <span>Birth · {formatDate(patient.patient_start_time)}</span>
-            <span>{formatDate(maxTime)}</span>
-          </div>
         </div>
       </div>
+
+      {/* Selected Encounter Inspector / Event Explorer */}
+      <footer
+        className={`tl-inspector ${isMaximized ? 'is-maximized' : ''}`}
+        style={selectedGroup ? { height: `${inspectorHeight}px` } : undefined}
+      >
+        {selectedGroup && (
+          <div
+            className="tl-inspector-resizer"
+            onMouseDown={handleResizerMouseDown}
+            onDoubleClick={toggleMaximize}
+            title="Drag to resize inspector height (Double click to toggle expand)"
+          >
+            <div className="tl-resizer-grip" />
+          </div>
+        )}
+        {selectedGroup ? (
+          <div className="tl-inspector-content">
+            {/* Inspector Header */}
+            <div className="tl-inspector-header">
+              <div className="tl-inspector-meta">
+                <span className="tl-inspector-tag">
+                  {selectedGroup.encounter ? 'ENCOUNTER DETAILS' : 'INDEPENDENT EVENTS'}
+                </span>
+                <h3 className="tl-inspector-title">
+                  {selectedGroup.encounter
+                    ? describeCode(schema?.encounters, selectedGroup.encounter.code)
+                    : 'Outpatient / Independent Events'}
+                </h3>
+                <div className="tl-inspector-sub">
+                  <span>📅 {formatDateTime(selectedItem?.start_time)}</span>
+                  {selectedGroup.encounter?.stop_time && (
+                    <>
+                      <span className="tl-dot-sep">·</span>
+                      <span>To: {formatDateTime(selectedGroup.encounter.stop_time)}</span>
+                    </>
+                  )}
+                  {selectedItem?.code && (
+                    <>
+                      <span className="tl-dot-sep">·</span>
+                      <code>Code: {selectedItem.code}</code>
+                    </>
+                  )}
+                  {selectedIsFuture && (
+                    <span className="tl-inspector-future-badge">Occurs in Future</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Subcategory Filter Tabs inside Inspector */}
+              <div className="tl-inspector-actions">
+                <div className="tl-category-tabs">
+                  <button
+                    type="button"
+                    className={`tl-tab ${filterCategory === 'all' ? 'is-active' : ''}`}
+                    onClick={() => setFilterCategory('all')}
+                  >
+                    All ({selectedGroup.events.length})
+                  </button>
+                  {Object.keys(getEventCounts(selectedGroup.events)).map((type) => {
+                    const count = selectedGroup.events.filter((e) => e.event_type === type).length;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        className={`tl-tab ${filterCategory === type ? 'is-active' : ''}`}
+                        style={{ '--tab-color': COLORS[type] }}
+                        onClick={() => setFilterCategory(type)}
+                      >
+                        {EVENT_LABELS[type] || type} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  className="tl-btn-icon"
+                  onClick={toggleMaximize}
+                  title={isMaximized ? 'Restore inspector height' : 'Expand inspector height'}
+                >
+                  {isMaximized ? '⤡' : '⤢'}
+                </button>
+                <button
+                  type="button"
+                  className="tl-btn-icon"
+                  onClick={() => setSelectedId(null)}
+                  title="Close encounter details"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Event List / Cards */}
+            <div className="tl-events-container">
+              {selectedChildEvents.length === 0 ? (
+                <div className="tl-no-events">
+                  {selectedGroup.events.length === 0
+                    ? 'No secondary events (conditions, medications, observations) recorded for this encounter.'
+                    : `No ${EVENT_LABELS[filterCategory] || filterCategory} records for this encounter.`}
+                </div>
+              ) : (
+                <div className="tl-events-grid">
+                  {selectedChildEvents.map((ev, idx) => {
+                    const code = ev.code ?? ev.bodysite_code;
+                    const dictKey = eventDictionaryKey(ev.event_type);
+                    const desc = describeCode(schema?.[dictKey], code);
+                    const color = COLORS[ev.event_type] || '#71c7aa';
+                    const evFuture = (toSeconds(ev.start_time) ?? 0) > cutoff;
+
+                    return (
+                      <div
+                        key={`${ev.event_type}-${ev.index ?? idx}`}
+                        className={`tl-event-card ${evFuture ? 'is-future' : ''}`}
+                        style={{ '--card-color': color }}
+                      >
+                        <div className="tl-event-card-top">
+                          <span className="tl-event-badge" style={{ backgroundColor: color }}>
+                            {EVENT_LABELS[ev.event_type] || ev.event_type}
+                          </span>
+                          <span className="tl-event-date">{formatDate(ev.start_time)}</span>
+                          {evFuture && <span className="tl-event-future-tag">FUTURE</span>}
+                        </div>
+
+                        <strong className="tl-event-title" title={desc}>
+                          {desc}
+                        </strong>
+
+                        <div className="tl-event-footer">
+                          <span className="tl-event-code">Code: {code ?? '—'}</span>
+                          {ev.value != null && (
+                            <span className="tl-event-value">
+                              Value: <strong>{ev.value} {ev.units ?? ''}</strong>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="tl-inspector-prompt">
+            <span>💡 Click any encounter above to inspect associated conditions, medications, procedures, and vitals.</span>
+          </div>
+        )}
+      </footer>
     </section>
   );
 }

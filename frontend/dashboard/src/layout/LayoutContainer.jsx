@@ -32,9 +32,21 @@ const layoutConfig = {
             title: 'Schema Diagram',
           },
           {
-            type: 'component',
-            componentType: 'Patient',
-            title: 'Patient',
+            type: 'column',
+            content: [
+              {
+                type: 'component',
+                componentType: 'Patient',
+                title: 'Patient Details',
+                //height
+                
+              },
+              {
+                type: 'component',
+                componentType: 'AI',
+                title: 'AI Insights',
+              },
+            ],
           },
         ],
       },
@@ -42,6 +54,7 @@ const layoutConfig = {
         type: 'component',
         componentType: 'Timeline',
         title: 'Event Timeline',
+        height: 70,
       },
     ],
   },
@@ -65,6 +78,15 @@ export default function LayoutContainer() {
         container.addEventListener('beforeComponentRelease', () => {
           root.unmount();
         });
+      });
+    });
+
+    layout.registerComponentFactoryFunction('AI', (container) => {
+      const root = ReactDOM.createRoot(container.element);
+      root.render(<div style={{ padding: '10px', color: '#fff' }}>AI Insights Panel (Placeholder)</div>);
+
+      container.addEventListener('beforeComponentRelease', () => {
+        root.unmount();
       });
     });
 
