@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { patientStore, usePatientStore } from './patientStore';
+import { getPatientAvatarUrl } from './avatarGenerator';
 import './patient.css';
 
 const TODAY = 1790812800; // Simulated reference date (~2026)
@@ -59,14 +60,47 @@ function formatDisplayValue(field, value) {
   return String(value);
 }
 
-function PatientAvatar() {
+function PatientAvatar({ patient }) {
+  const [seedSalt, setSeedSalt] = useState(0);
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const seed = useMemo(() => {
+    const base = patient?.patient_id ?? 'patient';
+    return seedSalt === 0 ? base : `${base}-${seedSalt}`;
+  }, [patient?.patient_id, seedSalt]);
+
+  const avatarUrl = useMemo(() => {
+    if (!patient) return null;
+    return getPatientAvatarUrl(patient, seed);
+  }, [patient, seed]);
+
+  const handleRandomize = useCallback(() => {
+    setSeedSalt((prev) => prev + 1);
+    setImgFailed(false);
+  }, []);
+
   return (
-    <div className="patient-avatar-wrap" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    </div>
+    <button
+      type="button"
+      className="patient-avatar-wrap"
+      onClick={handleRandomize}
+      title="Click to randomize avatar"
+      aria-label="Randomize patient avatar"
+    >
+      {avatarUrl && !imgFailed ? (
+        <img
+          src={avatarUrl}
+          alt={`Avatar for patient ${patient?.patient_id ?? ''}`}
+          className="patient-avatar-img"
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      )}
+    </button>
   );
 }
 
@@ -244,7 +278,7 @@ function DetailCard({ field, label, rawValue, values, editable = false, onOpen }
 }
 
 export default function Patient() {
-  const { patient, events, loading, error } = usePatientStore();
+  const { patient, loading, error } = usePatientStore();
   const [patientDictionary, setPatientDictionary] = useState({});
   const [openDetail, setOpenDetail] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -328,7 +362,7 @@ export default function Patient() {
     <section className="patient-panel" aria-label="Patient details">
       <header className="patient-header">
         <div className="patient-profile-main">
-          <PatientAvatar />
+          <PatientAvatar key={patient?.patient_id} patient={patient} />
 
           <div className="patient-identity">
             <div className="patient-meta-top">

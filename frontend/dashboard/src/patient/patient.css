@@ -75,6 +75,30 @@
   color: #71c7aa;
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.patient-avatar-wrap:hover {
+  border-color: #71c7aa;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(113, 199, 170, 0.2);
+}
+
+.patient-avatar-wrap:focus-visible {
+  outline: 2px solid #71c7aa;
+  outline-offset: 2px;
+}
+
+.patient-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
 }
 
 .patient-avatar-wrap svg {
