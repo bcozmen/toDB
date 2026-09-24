@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { usePatientStore } from '../patient/patientStore';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { usePatientStore, patientStore } from '../patient/patientStore';
 import { COLORS, EVENT_LABELS } from './timelineConstants';
 import './timeline.css';
 
@@ -150,11 +150,10 @@ function getEventCounts(childEvents) {
 }
 
 export default function Timeline() {
-  const { patient, events, schema } = usePatientStore();
+  const { patient, events, schema, cutoff: storeCutoff } = usePatientStore();
   const [selectedId, setSelectedId] = useState(null);
   const [filterCategory, setFilterCategory] = useState('all');
   const [now] = useState(() => Math.floor(Date.now() / 1000));
-  const [cutoff, setCutoff] = useState(now);
   const [inspectorHeight, setInspectorHeight] = useState(260);
   const [isMaximized, setIsMaximized] = useState(false);
   const trackRef = useRef(null);
@@ -179,17 +178,21 @@ export default function Timeline() {
     return { minTime: earliest, maxTime: latest, defaultCutoff: initialCutoff };
   }, [patient?.patient_start_time, eventTimes, now]);
 
+  const cutoff = storeCutoff ?? defaultCutoff;
+  const setCutoff = useCallback((newCutoff) => {
+    patientStore.setCutoff(typeof newCutoff === 'function' ? newCutoff(cutoff) : newCutoff);
+  }, [cutoff]);
+
   useEffect(() => {
-    setCutoff(defaultCutoff);
-    if (encounters.length > 0) {
-      const pastEncounters = encounters.filter((e) => {
-        const t = toSeconds(e.encounter?.start_time ?? e.events[0]?.start_time) ?? 0;
-        return t <= defaultCutoff;
-      });
-      const target = pastEncounters.at(-1) ?? encounters.at(-1);
-      setSelectedId(target?.id ?? null);
+    if (storeCutoff == null && defaultCutoff != null) {
+      patientStore.setCutoff(defaultCutoff);
     }
-  }, [patient?.patient_id, defaultCutoff, encounters]);
+  }, [storeCutoff, defaultCutoff]);
+
+  useEffect(() => {
+    setSelectedId(null);
+    setFilterCategory('all');
+  }, [patient?.patient_id]);
 
   const timeScale = useMemo(
     () => createTimeScale(minTime, maxTime, encounters),
@@ -198,6 +201,19 @@ export default function Timeline() {
 
   const trackWidth = Math.max(1200, Math.round(timeScale.total * 220));
   const contentWidth = trackWidth - TRACK_PADDING_X * 2;
+
+  // Start each patient at the newest chronological events. This also runs after
+  // a reload when the patient data has finished loading and the track is sized.
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (!track) return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      track.scrollLeft = track.scrollWidth - track.clientWidth;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [patient?.patient_id, encounters.length, minTime, maxTime, trackWidth]);
 
   const timeToX = useCallback((value) => {
     const coord = timeScale.coordinate(value);

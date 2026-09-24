@@ -173,6 +173,90 @@
   background: #e06666;
 }
 
+/* Future Visit Risk Badge (Derived from Cumulative Hazard) */
+.patient-risk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.patient-risk-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Green: Low Risk */
+.patient-risk-pill.risk-low {
+  background: rgba(113, 199, 170, 0.12);
+  color: #71c7aa;
+  border: 1px solid rgba(113, 199, 170, 0.32);
+}
+
+.patient-risk-pill.risk-low .patient-risk-dot {
+  background: #71c7aa;
+  box-shadow: 0 0 6px #71c7aa;
+}
+
+/* Yellow: Moderate Risk */
+.patient-risk-pill.risk-moderate {
+  background: rgba(230, 196, 92, 0.14);
+  color: #e6c45c;
+  border: 1px solid rgba(230, 196, 92, 0.35);
+}
+
+.patient-risk-pill.risk-moderate .patient-risk-dot {
+  background: #e6c45c;
+  box-shadow: 0 0 6px #e6c45c;
+}
+
+/* Red: High Risk */
+.patient-risk-pill.risk-high {
+  background: rgba(224, 102, 102, 0.14);
+  color: #e06666;
+  border: 1px solid rgba(224, 102, 102, 0.35);
+}
+
+.patient-risk-pill.risk-high .patient-risk-dot {
+  background: #e06666;
+  box-shadow: 0 0 6px #e06666;
+}
+
+/* Subtle loading state */
+.patient-risk-pill.risk-loading {
+  background: rgba(141, 162, 175, 0.1);
+  color: #8da2af;
+  border: 1px solid rgba(141, 162, 175, 0.25);
+}
+
+.patient-risk-pill.risk-loading .patient-risk-dot {
+  background: #8da2af;
+}
+
+.patient-risk-dot.is-pulsing {
+  animation: riskDotPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes riskDotPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
 .patient-title-row {
   display: flex;
   align-items: center;

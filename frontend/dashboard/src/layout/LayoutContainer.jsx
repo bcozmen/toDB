@@ -9,13 +9,14 @@ import 'golden-layout/dist/css/themes/goldenlayout-dark-theme.css';
 import Schema from '../schema/Schema'; 
 import Patient from '../patient/Patient'
 import Timeline from '../timeline/Timeline';
-
+import AI from '../ai/AI'; // Placeholder for AI Insights component
 
 // Map components for factory registration
 const components = {
   Schema,
   Patient,
   Timeline,
+  AI,
 };
 
 // Define Layout Config (uses componentType instead of componentName)
@@ -56,7 +57,7 @@ const layoutConfig = {
         type: 'component',
         componentType: 'Timeline',
         title: 'Event Timeline',
-        height: 60,
+        height: 40,
       },
     ],
   },
@@ -76,19 +77,13 @@ export default function LayoutContainer() {
         const root = ReactDOM.createRoot(container.element);
         root.render(<Component />);
 
-        // Clean up React root when panel is destroyed to prevent memory leaks
+        // Clean up React root when panel is destroyed to prevent memory leaks.
+        // Defer unmount out of the current React render tick to avoid synchronous unmount warnings.
         container.addEventListener('beforeComponentRelease', () => {
-          root.unmount();
+          setTimeout(() => {
+            root.unmount();
+          }, 0);
         });
-      });
-    });
-
-    layout.registerComponentFactoryFunction('AI', (container) => {
-      const root = ReactDOM.createRoot(container.element);
-      root.render(<div style={{ padding: '10px', color: '#fff' }}>AI Insights Panel (Placeholder)</div>);
-
-      container.addEventListener('beforeComponentRelease', () => {
-        root.unmount();
       });
     });
 

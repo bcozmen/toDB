@@ -32,5 +32,14 @@ export const api = {
   predict: async (patientFeatures) => {
     const response = await axios.post(`${API_BASE_URL}/predict`, patientFeatures);
     return response.data;
+  },
+
+  // 5. Fetch AI predictive insights (future hazard, next event forecasts)
+  getAiInsights: async (patient, events = []) => {
+    const response = await axios.post(`${API_BASE_URL}/ai_insights`, {
+      patient,
+      events,
+    });
+    return response.data;
   }
 };

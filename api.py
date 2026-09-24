@@ -126,6 +126,39 @@ def get_random_patient():
         raise HTTPException(status_code=500, detail="Error decoding JSON data")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Time is normalized by ten years in the dataset loader.
+DEFAULT_FUTURE_HORIZONS = ["1 week", "1 month", "6 months", "1 year", "5 years", "10 years"]
+
+@app.post("/ai_insights")
+def get_ai_insights(request: dict):
+    try:
+        patient_data = request.get("patient")
+        events_data = request.get("events")
+        if patient_data is None or events_data is None:
+            raise HTTPException(status_code=400, detail="Missing patient or events data in the request")
+        
+        future_hazard = np.random.rand(6)
+        future_hazard = future_hazard / future_hazard.sum()  # Normalize to sum to 1
+        cumilative_hazard = np.cumsum(future_hazard)
+        future_code = np.random.randint(0, 5, size=6)  # Mock code predictions
+        # Here you would implement your AI insights logic based on the patient and events data.
+        # For demonstration purposes, we'll return a mock response.
+        next_time = "2024-07-01T12:00:00Z"  # Mock next time prediction
+        next_table = "observations"  # Mock next table prediction
+        next_code = "123456"
+        ai_insights = {
+            "future_hazard": cumilative_hazard.tolist(),  # Mock hazard predictions
+            "future_code": future_code.tolist(),  # Mock code predictions
+            "future_horizon": DEFAULT_FUTURE_HORIZONS,  # Mock horizons
+            "next_time": next_time,
+            "next_table": next_table,
+            "next_code": next_code
+        }
+        return ai_insights
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 def _normalize_foreign_key(value):
     if not value:
         return None

@@ -20,18 +20,65 @@ function formatDate(value) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(seconds * 1000));
 }
 
-function getPatientMeta(patient) {
+function getPatientMeta(patient, cutoff) {
   const birth = toUnixSeconds(patient?.patient_start_time);
-  const end = toUnixSeconds(patient?.patient_stop_time);
-  const isDeceased = end !== null;
+  const death = toUnixSeconds(patient?.patient_stop_time);
   if (birth === null) {
-    return { ageText: 'Unknown age', isDeceased };
+    return { ageText: 'Unknown age', isDeceased: false };
   }
-  const refTime = end ?? TODAY;
+  // Cut-off date serves as reference "today"
+  const today = cutoff ?? Math.floor(Date.now() / 1000);
+  const isDeceased = death !== null && death <= today;
+  const refTime = isDeceased ? death : today;
   const age = Math.max(0, Math.floor((refTime - birth) / (365.2425 * 24 * 60 * 60)));
   return {
     ageText: isDeceased ? `${age} yrs (deceased)` : `${age} yrs old`,
     isDeceased,
+  };
+}
+
+export function deriveFutureVisitRisk(aiInsights) {
+  if (!aiInsights || !Array.isArray(aiInsights.future_hazard) || aiInsights.future_hazard.length === 0) {
+    return null;
+  }
+  const hazards = aiInsights.future_hazard;
+  const horizons = aiInsights.future_horizon || [];
+
+  // Prefer 1-year cumulative hazard horizon, then 6 months, else middle index
+  let index = horizons.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('1 year'));
+  if (index === -1) {
+    index = horizons.findIndex((h) => typeof h === 'string' && h.toLowerCase().includes('6 month'));
+  }
+  if (index === -1) {
+    index = Math.min(3, hazards.length - 1);
+  }
+
+  const rawVal = hazards[index];
+  if (rawVal == null || !Number.isFinite(rawVal)) return null;
+  const value = Math.max(0, Math.min(1, rawVal));
+  const pct = Math.round(value * 100);
+  const horizonLabel = horizons[index] || '1-Year';
+
+  // Thresholds:
+  // Low (< 0.35): Green
+  // Moderate (0.35 - 0.65): Yellow
+  // High (>= 0.65): Red
+  let level = 'low';
+  let label = 'Low Risk';
+  if (value >= 0.65) {
+    level = 'high';
+    label = 'High Risk';
+  } else if (value >= 0.35) {
+    level = 'moderate';
+    label = 'Moderate Risk';
+  }
+
+  return {
+    level,
+    label,
+    pct,
+    horizonLabel,
+    tooltip: `Future visit risk (${horizonLabel}): ${pct}% cumulative hazard (${label})`,
   };
 }
 
@@ -278,7 +325,7 @@ function DetailCard({ field, label, rawValue, values, editable = false, onOpen }
 }
 
 export default function Patient() {
-  const { patient, loading, error } = usePatientStore();
+  const { patient, loading, error, cutoff, aiInsights, aiLoading } = usePatientStore();
   const [patientDictionary, setPatientDictionary] = useState({});
   const [openDetail, setOpenDetail] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -334,6 +381,12 @@ export default function Patient() {
     setTimeout(() => setCopied(false), 1600);
   };
 
+  const riskInfo = useMemo(() => deriveFutureVisitRisk(aiInsights), [aiInsights]);
+  const { ageText, isDeceased } = useMemo(
+    () => getPatientMeta(patient, cutoff),
+    [patient, cutoff]
+  );
+
   if (loading && !patient) {
     return (
       <div className="patient-state">
@@ -356,8 +409,6 @@ export default function Patient() {
     );
   }
 
-  const { ageText, isDeceased } = getPatientMeta(patient);
-
   return (
     <section className="patient-panel" aria-label="Patient details">
       <header className="patient-header">
@@ -370,6 +421,23 @@ export default function Patient() {
               <span className={`patient-status-pill ${isDeceased ? 'status-deceased' : 'status-active'}`}>
                 {isDeceased ? 'Deceased' : 'Active'}
               </span>
+
+              {/* Risk badge only visible if the patient is active */}
+              {!isDeceased && riskInfo && (
+                <span
+                  className={`patient-risk-pill risk-${riskInfo.level}`}
+                  title={riskInfo.tooltip}
+                >
+                  <span className="patient-risk-dot" />
+                  <span>{riskInfo.label} · {riskInfo.pct}%</span>
+                </span>
+              )}
+              {!isDeceased && aiLoading && !riskInfo && (
+                <span className="patient-risk-pill risk-loading" title="Assessing future visit risk…">
+                  <span className="patient-risk-dot is-pulsing" />
+                  <span>Assessing Risk…</span>
+                </span>
+              )}
             </div>
 
             <div className="patient-title-row">

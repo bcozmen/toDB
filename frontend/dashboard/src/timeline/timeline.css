@@ -488,7 +488,7 @@
 .tl-inspector {
   flex: 0 0 auto;
   position: relative;
-  min-height: 120px;
+  min-height: 0;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
