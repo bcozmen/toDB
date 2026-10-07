@@ -16,12 +16,13 @@ class Embedding(nn.Module):
         self.categorical = nn.Embedding(num_embeddings=len(dictionary), embedding_dim=self.latent_dim)
         self.numeric = NumericProjectionWithFrequency(input_dim=1, output_dim=self.latent_dim, num_frequencies=num_frequencies, time=False)
         self.time = NumericProjectionWithFrequency(input_dim=1, output_dim=self.latent_dim, num_frequencies=num_frequencies, time=True)
-        self.source_target = nn.Embedding(num_embeddings=2, embedding_dim=self.latent_dim)  # For source/target indicator
+        self.age = NumericProjectionWithFrequency(input_dim=1, output_dim=self.latent_dim, num_frequencies=num_frequencies, time=True)
+        #self.source_target = nn.Embedding(num_embeddings=2, embedding_dim=self.latent_dim)  # For source/target indicator
         # Content masking is supplied by the dataset so paired positive and
         # negative sequences receive exactly the same mask signature.
-        self.mask_token = nn.Parameter(torch.randn(1, self.embedding_length - 1, 1, self.latent_dim) * 0.02)
+        self.mask_token = nn.Parameter(torch.randn(1, self.embedding_length, 1, self.latent_dim) * 0.02)
 
-        self.time_columns = [3]  # Start time
+        self.time_columns = [5]  # Time since previous event
 
         self.projector = nn.Linear(self.latent_dim * self.embedding_length, self.embedding_dim)
         self.layer_norm = nn.LayerNorm(self.embedding_dim)
@@ -36,7 +37,7 @@ class Embedding(nn.Module):
 
     def reset_parameters(self):
         nn.init.normal_(self.categorical.weight, mean=0.0, std=0.02)
-        nn.init.normal_(self.source_target.weight, mean=0.0, std=0.02)
+        #nn.init.normal_(self.source_target.weight, mean=0.0, std=0.02)
         nn.init.kaiming_uniform_(self.projector.weight, nonlinearity='linear')
         if self.projector.bias is not None:
             nn.init.zeros_(self.projector.bias)
@@ -47,19 +48,21 @@ class Embedding(nn.Module):
         cat_first = self.get_categorical_embeddings(X[..., [0],:])
         numeric = self.get_numeric_embeddings(X[..., [1], :], X[..., [2], :])
         time = self.get_time_embeddings(X[..., self.time_columns, :])
+        age = self.get_age_embeddings(X[..., [3], :])
         cat_last = self.get_categorical_embeddings(X[..., [6, 7], :])
-        source_target = self.source_target(X[..., [9], :].long())
-        embeddings = torch.cat([cat_first, numeric, time, cat_last, source_target], dim=1)
+
+        #THIS DOESN'T WORK CORRECTLY RIGHT NOW. IF PATIENT TOKENS IS EXCHANGED, THEY WILL NOT GET ROLES
+        #source_target = self.source_target(X[..., [9], :].long())
+        embeddings = torch.cat([cat_first, numeric, time, age, cat_last], dim=1)
 
         # Mask all content features together.  The source/target marker is a
         # sampling-role indicator, not token content, so it remains visible.
         content_mask = X[..., self.MASK_CHANNEL:self.MASK_CHANNEL + 1, :].bool()
-        masked_content = torch.where(
+        embeddings = torch.where(
             content_mask.unsqueeze(-1),
             self.mask_token.to(dtype=embeddings.dtype),
-            embeddings[:, :-1],
+            embeddings,
         )
-        embeddings = torch.cat([masked_content, embeddings[:, -1:]], dim=1)
         #embeddings shape = (batch_size, embedding_length, seq_length, embedding_dim)
 
         #pad embeddings with the empty token
@@ -119,5 +122,15 @@ class Embedding(nn.Module):
             nan_mask.unsqueeze(-1), missing_embedding.to(embeddings.dtype), embeddings
         )
         return embeddings
+
+    def get_age_embeddings(self, age_vals):
+        """Embed birth-relative age separately from inter-event time."""
+        finite = torch.isfinite(age_vals)
+        safe_age = torch.nan_to_num(age_vals, nan=0.0, posinf=0.0, neginf=0.0)
+        embeddings = self.age(safe_age.unsqueeze(-1))
+        missing_embedding = self.categorical(
+            torch.tensor(self.dictionary.encode(float('inf')), device=age_vals.device, dtype=torch.long)
+        ).to(embeddings.dtype)
+        return torch.where(finite.unsqueeze(-1), embeddings, missing_embedding)
 
 

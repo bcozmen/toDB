@@ -7,7 +7,7 @@ import torch.nn.functional as F
 NUM_CHANNELS = 9
 NUM_PATIENT_TOKENS = 7
 MASK_CHANNEL = NUM_CHANNELS + 1  # Runtime channel after the source/target marker.
-TIME_SCALE = (60 * 60 * 24 * 365) * 10
+TIME_SCALE = (60 * 60 * 24 * 365) * 1
 # Event and patient tensors contain raw epoch seconds until ``swap`` scales
 # their time channels.  Keep this cutoff in the same units as those tensors.
 MAX_DATE = 1790812800
@@ -24,7 +24,7 @@ from .helper import NegativeSampler, PatientRepository
 
 class PatientEventsDataset(Dataset):
     def __init__(self, path, context_size, shuffle=True,
-            poison_fraction=[0.1, 0.3], mask_rate=0.15, threads = 1, lazy_index = False):
+            poison_fraction=[0.01, 0.2], mask_rate=0.15, threads = 1, lazy_index = False):
         self.context_size = context_size
         self.lazy_index = lazy_index
         self.shuffle = shuffle
@@ -83,8 +83,27 @@ class PatientEventsDataset(Dataset):
             for sample in self.get_sample(pos, neg, batch_patient_data, batch_events_by_patient)
         ]
 
-        return ret_arr
+        ret_arr = self.dynamic_padding(ret_arr)
 
+        return ret_arr
+    def dynamic_padding(self, batch: list) -> list:
+        if not batch:
+            return []
+
+        # Stack padding masks across the batch into a 2D tensor [batch_size, context_size]
+        masks = torch.stack([sample[1] for sample in batch])
+
+        # Count valid (non-padded) tokens per sample and find the maximum active length
+        # False in padding_mask denotes valid tokens
+        max_len = (~masks).sum(dim=1).max().item()
+        max_len = max(int(max_len), 1)  # Guard against 0-length corner cases
+        
+        # Slice each hard-padded sample to max_len (returns lightweight tensor views)
+        return [
+            (tokens[:, :max_len], mask[:max_len], labels[:max_len])
+            for tokens, mask, labels in batch
+        ]
+        #
     def get_tokens(self, ix, batch_patient_data, batch_events_by_patient):
         patient = batch_patient_data[ix]
         patient_tokens = self.repository.patient_to_tensor(patient)
@@ -95,6 +114,7 @@ class PatientEventsDataset(Dataset):
         swap_fraction = torch.rand(1).item() * (self.poison_fraction[1] - self.poison_fraction[0]) + self.poison_fraction[0]
         num_swap = int(pos_event_tokens.shape[1] * swap_fraction)
         num_swap = min(num_swap, neg_event_tokens.shape[1])
+        num_swap = max(num_swap, 1)  # Ensure at least one swap occurs
 
         return num_swap
 
@@ -116,6 +136,7 @@ class PatientEventsDataset(Dataset):
         used_targets = set()
         matches = []
 
+        
         for donor_index in donor_indices.tolist():
             if len(matches) == num_swap:
                 break
@@ -134,7 +155,13 @@ class PatientEventsDataset(Dataset):
             )
 
             used_targets.add(target_index)
-            matches.append((target_index, donor_index))
+            matches.append((target_index, donor_index))      
+
+        if len(matches) == 0 and neg_event_tokens.shape[1] > 0 and pos_event_tokens.shape[1] > 0:
+            # If no matches were found, randomly select a target and donor index
+            target_index = torch.randint(0, pos_event_tokens.shape[1], (1,)).item()
+            donor_index = torch.randint(0, neg_event_tokens.shape[1], (1,)).item()
+            matches.append((target_index, donor_index))  
 
         return matches
 
@@ -150,6 +177,7 @@ class PatientEventsDataset(Dataset):
     @staticmethod
     def _add_role_row(patient_tokens, event_tokens, event_role):
         """Append the source/target row and concatenate patient and event tokens."""
+        #THIS DOESN'T WORK CORRECTLY RIGHT NOW. IF PATIENT TOKENS IS EXCHANGED, THEY WILL NOT GET ROLES
         patient_role = torch.zeros_like(patient_tokens[:1])
         patient_tokens = torch.cat((patient_tokens, patient_role), dim=0)
         event_tokens = torch.cat((event_tokens, event_role.unsqueeze(0)), dim=0)
@@ -165,6 +193,35 @@ class PatientEventsDataset(Dataset):
         return pos_tokens, neg_tokens
 
     def enforce_context_size(self, tokens):
+        max_events = self.context_size - NUM_PATIENT_TOKENS
+        seq_length = tokens.shape[1]
+        if tokens.shape[1] <= max_events:
+            return tokens
+
+        encounter_type = EVENT_TO_INDEX["encounters"]
+        #choose a random maximum-length window of events
+        valid_starts = torch.where(
+            (tokens[8] == encounter_type) & (torch.arange(seq_length) <= seq_length - max_events)
+        )
+
+        if valid_starts[0].numel() == 0:
+            start_index = torch.randint(0, seq_length - max_events + 1, (1,)).item()
+        else:
+            rand_i = torch.randint(0, valid_starts[0].numel(), (1,)).item()
+            start_index = valid_starts[0][rand_i].item()
+        return tokens[:, start_index:start_index + max_events]
+            
+
+            
+    def enforce_context_size_old(self, tokens):
+        """Keep a contiguous chronological event window.
+
+        Removing random encounter groups breaks the time axis and makes a
+        later encounter look like an artificial censoring boundary.  A
+        contiguous window preserves ordering and makes future-time targets
+        meaningful.  The default keeps the earliest window so all retained
+        landmarks have as much observed follow-up as possible.
+        """
         max_events = self.context_size - NUM_PATIENT_TOKENS
         if tokens.shape[1] <= max_events:
             return tokens
@@ -231,8 +288,25 @@ class PatientEventsDataset(Dataset):
 
     def scale_time_columns(self, tokens):
         tokens[3:6] = tokens[3:6] / TIME_SCALE  # Normalize time columns
+        # Channel 3 is age at the event. Do not expose the patient-token
+        # copy of birth time/lifetime, which reveals the maximum observed age.
+        tokens[3, :NUM_PATIENT_TOKENS] = float("inf")
+        # Channel 5 already contains time since the previous event. For the
+        # first event in the retained context, use age since birth because
+        # its previous event may be outside a truncated context window.
+        first_event = NUM_PATIENT_TOKENS
+        if tokens.shape[1] > first_event:
+            tokens[5, first_event] = tokens[3, first_event]
         return tokens
 
+    def swap_patient_tokens(self, pos_patient_tokens, neg_patient_tokens):
+        neg_patient_tokens = neg_patient_tokens.clone()
+        
+        rand = torch.randint(1, NUM_PATIENT_TOKENS, (1,)).item()
+        rand_indices = torch.randperm(NUM_PATIENT_TOKENS)[:rand]
+        for ch in list(REPLACED_CHANNELS):
+            pos_patient_tokens[ch, rand_indices] = neg_patient_tokens[ch, rand_indices]
+        return pos_patient_tokens, rand_indices
     def swap(self, pos_patient_tokens, pos_event_tokens, neg_patient_tokens, neg_event_tokens):
         pos_event_tokens = self.enforce_context_size(pos_event_tokens)
         neg_tokens = pos_event_tokens.clone()
@@ -240,12 +314,17 @@ class PatientEventsDataset(Dataset):
 
         replacement_mask = torch.zeros(pos_event_tokens.shape[1])
         matches = self._match_event_indices(pos_event_tokens, neg_event_tokens, num_swap)
-
         for target_index, donor_index in matches:
             neg_tokens[list(REPLACED_CHANNELS), target_index] = neg_event_tokens[list(REPLACED_CHANNELS), donor_index]
             replacement_mask[target_index] = 1.0
-
+        
         replacement_mask = torch.cat((torch.zeros(NUM_PATIENT_TOKENS), replacement_mask), dim=0)
+
+        if len(matches) == 0:
+            pos_patient_tokens, rand_indices = self.swap_patient_tokens(pos_patient_tokens, neg_patient_tokens)
+            replacement_mask[rand_indices] = 1.0
+
+        
         #neg_labels = self._prefix_mask(replacement_mask)
         neg_labels = torch.zeros_like(replacement_mask)
         pos_labels = torch.ones_like(neg_labels)

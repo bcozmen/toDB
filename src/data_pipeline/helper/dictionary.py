@@ -42,4 +42,5 @@ class HealthCareDictionary():
         checkpoint = torch.load(path, map_location="cpu")
         self.str_to_id = checkpoint["str_to_id"]
         self.id_to_str = checkpoint["id_to_str"]
-        
+
+

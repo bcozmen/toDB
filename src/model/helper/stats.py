@@ -9,7 +9,7 @@ class StatLogger(nn.Module):
         self.auc_bins = auc_bins
         self.entropy_names = (
             "Classification", "Next Table", "Next Code",
-            "Future Hazard", "Future Code",
+            "Future Time", "Future Code",
         )
         self._batch_entropies = {}
 
@@ -74,6 +74,10 @@ class StatLogger(nn.Module):
     @torch.no_grad()
     def categorical(self, probabilities, predictions, labels):
         """Compute entropy, top-k accuracy, and top-k AUC."""
+        # Do not calculate diagnostics from AMP probabilities: fp16 softmax
+        # rounds confident predictions to exactly 0/1 and hides the onset of
+        # logit saturation.
+        probabilities = probabilities.float()
         num_classes = probabilities.size(-1)
         probabilities = probabilities.reshape(-1, num_classes)
         predictions = predictions.reshape(-1).long()
@@ -122,7 +126,7 @@ class StatLogger(nn.Module):
                 self.logger.add(log_name, metrics[:4].cpu())
                 self._batch_entropies[log_name] = metrics[4]
             else:
-                probabilities = torch.softmax(logits, dim=-1)
+                probabilities = torch.softmax(logits.float(), dim=-1)
                 predictions = torch.argmax(probabilities, dim=-1)
                 top_k_accuracy, top_k_auc, entropy = self.categorical(
                     probabilities, predictions, labels
@@ -130,6 +134,27 @@ class StatLogger(nn.Module):
                 self.logger.add(f"{log_name} Top-K Accuracy", top_k_accuracy.cpu())
                 self.logger.add(f"{log_name} Top-K AUC", top_k_auc.cpu())
                 self._batch_entropies[log_name] = entropy
+
+    def log_gaussian(self, distribution, targets, log_name, n_gaussians):
+        """Log point-prediction errors and uncertainty for a Gaussian head."""
+        from .gaussian import GaussianMixtureEstimator
+
+        with torch.no_grad():
+            targets = targets.reshape(-1)
+            distribution = distribution.reshape(-1, distribution.shape[-1])
+            if targets.numel() == 0:
+                self.logger.add(log_name, torch.full((2,), float("nan")))
+                if log_name in self.entropy_names:
+                    self._batch_entropies[log_name] = distribution.new_tensor(float("nan"))
+                return
+
+            point = GaussianMixtureEstimator.point_prediction(distribution, n_gaussians)
+            error = point - targets
+            self.logger.add(log_name, torch.stack((error.abs().mean(), error.square().mean().sqrt())).cpu())
+            if log_name in self.entropy_names:
+                self._batch_entropies[log_name] = GaussianMixtureEstimator.entropy(
+                    distribution, n_gaussians
+                ).mean()
 
     def log_entropy(self):
         """Log all classification entropies as one fixed-width metric vector."""

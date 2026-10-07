@@ -82,6 +82,7 @@ export const patientStore = {
   },
   setLoading: () => emit({ ...snapshot, loading: true, error: null }),
   setData: (patient, events = [], groundTruth = {}) => {
+    console.log('Setting patient data in store:', { patient, events, groundTruth });
     const defaultCutoff = computeDefaultCutoff(patient, events);
     emit({
       ...snapshot,

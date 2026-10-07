@@ -111,7 +111,16 @@ class PatientRepository:
         cols = [col[0] for col in res.description]
         return [dict(zip(cols, row)) for row in res.fetchall()]
         
-
+    def events_to_tensor(self, events):
+        if not events:
+            return torch.empty((self.num_channels, 0), dtype=torch.float32)
+        event_tokens = torch.from_numpy(
+            np.asarray(
+                [[event[f"token_{i}"] for i in range(self.num_channels)] for event in events],
+                dtype=np.float32,
+            )
+        ).T  # Transpose to shape (num_channels, seq_length)
+        return event_tokens
     def fetch_events_by_patients_vectorized(self, mode: str, patient_data: list[dict]) -> dict[int, torch.Tensor]:
         """Fetch and group patient events using DuckDB/NumPy vectorized operations."""
         if not patient_data:

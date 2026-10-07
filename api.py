@@ -131,6 +131,8 @@ def get_random_patient():
 # Time is normalized by ten years in the dataset loader.
 DEFAULT_FUTURE_HORIZONS = ["1 week", "1 month", "6 months", "1 year", "5 years", "10 years"]
 
+
+from predictor import model
 @app.post("/ai_insights")
 def get_ai_insights(request: dict):
     try:
@@ -138,10 +140,54 @@ def get_ai_insights(request: dict):
         events_data = request.get("events")
         if patient_data is None or events_data is None:
             raise HTTPException(status_code=400, detail="Missing patient or events data in the request")
+
+        patient = patient_repo.patient_to_tensor(patient_data)
+        events = patient_repo.events_to_tensor(events_data)
+
+
+        tokens = torch.cat([patient, events], dim=1)  # Concatenate patient and events tensors along the sequence dimension
+
+        #add a extra token dimension to the tokens tensor to match the model's expected input shape
+        tokens = torch.cat([tokens, torch.zeros((2, tokens.shape[1]), device=tokens.device)], dim=0)  # Add a token dimension
+        padding_mask = torch.zeros(tokens.shape[1], dtype=torch.bool, device=tokens.device)  # No padding in this example
+        tokens = tokens.unsqueeze(0)  # Add batch dimension
+        padding_mask = padding_mask.unsqueeze(0)  # Add batch dimension
+
+        sequence_length = tokens.shape[-1]
+        if sequence_length > model.context_size or sequence_length < 2:
+            raise HTTPException(status_code=400, detail=f"Sequence length {sequence_length} is out of bounds for the model's context size {model.context_size}")
+        with torch.no_grad():
+            # Float16 autocast can overflow intermediate activations even
+            # when the checkpoint parameters are finite, producing NaN logits.
+            # Keep API inference in float32; the model was trained with AMP.
+            with torch.autocast(device_type='cuda', enabled=False):
+                class_logits, next_event, future_encounter = model((tokens, padding_mask))  # Add batch dimension
+        print("Class logits shape:", class_logits.shape)
+        hazard_logits, code_logits = future_encounter
+        print("Hazard logits shape:", hazard_logits.shape)
+        print("Code logits shape:", code_logits.shape)
+        time_params, table_logits, code_logits = next_event
+        print("Time params shape:", time_params.shape)
+        print("Table logits shape:", table_logits.shape)
+        print("Code logits shape:", code_logits.shape)
         
-        future_hazard = np.random.rand(6)
-        future_hazard = future_hazard / future_hazard.sum()  # Normalize to sum to 1
-        cumilative_hazard = np.cumsum(future_hazard)
+        raw_hazard = hazard_logits[0, -1].float()
+        if not torch.isfinite(raw_hazard).all():
+            raise HTTPException(status_code=500, detail="Model returned non-finite future hazard logits")
+
+        # `hazard[k]` is conditional on surviving all earlier intervals.
+        # Convert logits into both interval-event and cumulative probabilities.
+        interval_hazard = torch.sigmoid(raw_hazard)
+        survival_before = torch.cumprod(
+            1.0 - interval_hazard, dim=-1
+        ).roll(1, dims=-1)
+        survival_before[0] = 1.0
+        interval_probability = survival_before * interval_hazard
+        cumulative_probability = 1.0 - torch.cumprod(
+            1.0 - interval_hazard, dim=-1
+        )
+        print("Interval event probability:", interval_probability.tolist())
+        print("Cumulative event probability:", cumulative_probability.tolist())
         future_code = np.random.randint(0, 5, size=6)  # Mock code predictions
         # Here you would implement your AI insights logic based on the patient and events data.
         # For demonstration purposes, we'll return a mock response.
@@ -149,7 +195,9 @@ def get_ai_insights(request: dict):
         next_table = "observations"  # Mock next table prediction
         next_code = "123456"
         ai_insights = {
-            "future_hazard": cumilative_hazard.tolist(),  # Mock hazard predictions
+            # Preserve the conditional hazards and expose the two useful
+            # probability interpretations separately.
+            "future_hazard": cumulative_probability.tolist(),
             "future_code": future_code.tolist(),  # Mock code predictions
             "future_horizon": DEFAULT_FUTURE_HORIZONS,  # Mock horizons
             "next_time": next_time,
@@ -157,6 +205,8 @@ def get_ai_insights(request: dict):
             "next_code": next_code
         }
         return ai_insights
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 def _normalize_foreign_key(value):

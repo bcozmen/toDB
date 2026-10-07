@@ -9,16 +9,9 @@ from torch.nn.attention import SDPBackend, sdpa_kernel
 
 from .. import HealthCareDictionary
 
-
+IMPORTANT_ENCOUNTER_INDICES = [984, 1034, 1016, 1036, 1037, 1038, 1043, 1044, 990, 991, 992, 995, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1014, 1021, 1024, 1033, 1041, 1042, 986]
 # Time is normalized by ten years in the dataset loader.
-DEFAULT_FUTURE_HORIZONS = (
-	7 / 3650,       # 1 week
-	30 / 3650,      # 1 month
-	182 / 3650,     # 6 months
-	365 / 3650,     # 1 year
-	1825 / 3650,    # 5 years
-	3650 / 3650,    # 10 years
-)
+FUTURE_ENCOUNTER_HORIZON = 3650 / 3650  # 10 years
 
 
 class DBTransformer(BaseModel):
@@ -39,7 +32,7 @@ class DBTransformer(BaseModel):
 		self.use_checkpointing = use_checkpointing
 		self.num_gaussians = num_gaussians
 		self.condition_dim = d_model // num_embedding
-		self.future_horizons = tuple(DEFAULT_FUTURE_HORIZONS)
+		self.future_horizon = FUTURE_ENCOUNTER_HORIZON
 		
 		self.context_size = context_size
 		self.encoder_layer_args = {"d_model": d_model, "nhead": nhead, "dim_feedforward": dim_feedforward, "dropout": dropout, "activation": activation}
@@ -50,8 +43,9 @@ class DBTransformer(BaseModel):
 		x, m = X
 		tokens, e_raw, m = self.embedding_network((x,m))
 		
-		with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
-			latent = self.transformer_network((tokens, m))
+		#with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+		#	latent = self.transformer_network((tokens, m))
+		latent = self.transformer_network((tokens, m))
 		return self.decoder_network((latent, x))
 	
 	def get_loss(self, X):
@@ -60,7 +54,7 @@ class DBTransformer(BaseModel):
 
 		loss = self.classification_task(class_logits, labels, m)
 		next_losses = self.next_event_losses(x, m, labels, *next_event) 
-		future_losses = self.future_encounter_losses(x, m, *future_encounter)
+		future_losses = self.future_encounter_losses(x, m, labels, *future_encounter)
 
 		total_loss = loss + next_losses.sum() + future_losses.sum()
 		losses = torch.cat((loss.unsqueeze(0), next_losses, future_losses))
@@ -72,41 +66,65 @@ class DBTransformer(BaseModel):
 		"""Teacher-forced loss for time, table, and code prediction."""
 		valid = ~(padding_mask.bool() | labels.eq(0))
 		valid = valid & (x[..., 8, :] > 0)
-		time = x[..., 3, :]
+		time = torch.nan_to_num(x[..., 5, :], nan=0.0, posinf=0.0, neginf=0.0)
 		table = x[..., 6, :].long()
 		code = x[..., 0, :].long()
 
 		time_loss = -GaussianMixtureEstimator.log_likelihood(time, time_params.squeeze(-2), self.num_gaussians)
 		table_loss = self.cross_entropy_loss(table_logits.transpose(1, 2), table)
 		code_loss = self.cross_entropy_loss(code_logits.transpose(1, 2), code)
+		self.stat_logger.log_gaussian(time_params.squeeze(-2)[valid], time[valid], "Next Time", self.num_gaussians)
 		
-		valid = valid & torch.isfinite(time)		
 		self._log_next_event_metrics(table_logits, code_logits, table, code, valid)
 		return torch.stack((time_loss[valid].mean(), table_loss[valid].mean(), code_loss[valid].mean())) if valid.any() else torch.zeros(3, device=x.device)
 
+	def future_encounter_losses(self, x, padding_mask, labels, future_params, code_logits):
+		"""Predict the closest future important encounter from each encounter.
 
-	def future_encounter_losses(self, x, padding_mask, hazard_logits, code_logits):
-		with torch.no_grad():
-			hazard_target, hazard_mask, code_target = self._future_targets(x, padding_mask)
-		
-		# Each hazard is conditional on surviving to the beginning of its
-		# interval. The mask excludes intervals hidden by censoring or by an
-		# earlier encounter.
-		hazard_values = self.bce_loss(hazard_logits, hazard_target)
-		hazard_loss = hazard_values[hazard_mask].mean() if hazard_mask.any() else hazard_values.sum() * 0.0
-		
-		code_values = self.cross_entropy_loss(code_logits.reshape(-1, code_logits.size(-1)), code_target.reshape(-1)).reshape_as(hazard_target)
-		event_mask = hazard_mask & hazard_target.bool()
-		code_loss = code_values[event_mask].mean() if event_mask.any() else code_values.sum() * 0.0
-		self.stat_logger.log_classification(
-			hazard_logits[hazard_mask].detach(), hazard_target[hazard_mask],
-			"Future Hazard", task="binary"
+		The time target is measured from the prediction time immediately before
+		the current sequence position to the target encounter. Channel 3 contains
+		birth-relative age, so the target is the difference between target and
+		prediction ages.
+		"""
+		observed = ~(padding_mask.bool() | labels.eq(0))
+		encounters = observed & x[..., 8, :].eq(1)
+		ages = torch.nan_to_num(x[..., 3, :], nan=0.0, posinf=0.0, neginf=0.0)
+		codes = x[..., 0, :].long()
+
+		important = torch.isin(codes, x.new_tensor(IMPORTANT_ENCOUNTER_INDICES).long()) & observed
+		positions = torch.arange(x.size(-1), device=x.device).expand_as(codes)
+		suffix_positions = torch.flip(
+			torch.cummin(torch.flip(torch.where(important, positions, x.size(-1)), (1,)), 1).values,
+			(1,),
 		)
-		self.stat_logger.log_classification(
-			code_logits[event_mask].detach(), code_target[event_mask],
-			"Future Code", task="multiclass"
+		has_target = suffix_positions.lt(x.size(-1))
+		target_positions = suffix_positions.clamp_max(x.size(-1) - 1)
+
+
+		prediction_positions = (positions - 1).clamp_min(0)
+		prediction_ages = ages.gather(1, prediction_positions)
+		target_ages = ages.gather(1, target_positions)
+		target_times = (target_ages - prediction_ages).clamp_min(0.0)
+		target_codes = codes.gather(1, target_positions)
+		encounters = encounters & has_target
+
+		if not encounters.any():
+			self.stat_logger.log_gaussian(future_params[encounters, :], target_times[encounters], "Future Time", self.num_gaussians)
+			return torch.zeros(2, device=x.device)
+
+		future_time_loss = -GaussianMixtureEstimator.log_likelihood(
+			target_times[encounters], future_params[encounters, :], self.num_gaussians
 		)
-		return torch.stack((hazard_loss, code_loss))
+		self.stat_logger.log_gaussian(
+			future_params[encounters, :], target_times[encounters], "Future Time", self.num_gaussians
+		)
+		code_loss = self.cross_entropy_loss(code_logits[encounters, :], target_codes[encounters])
+
+		self.stat_logger.log_classification(
+			code_logits[encounters].detach(), target_codes[encounters], "Future Code", task="multiclass"
+		)
+		return torch.stack((future_time_loss.mean(), code_loss.mean()))
+		
 
 	def _log_next_event_metrics(self, table_logits, code_logits, table, code, valid):
 		self.stat_logger.log_classification(
@@ -115,92 +133,6 @@ class DBTransformer(BaseModel):
 		self.stat_logger.log_classification(
 			code_logits[valid].detach(), code[valid], "Next Code", task="multiclass"
 		)
-
-	def _future_targets(self, x, padding_mask):
-		"""Build discrete-time survival targets at encounter landmarks.
-
-		The final observed time is treated as a censoring boundary. This is
-		conservative for truncated contexts and can later be replaced by exact
-		patient follow-up metadata from the repository. Each encounter position
-		is a landmark, and the target is the first encounter strictly after it.
-		Each output horizon is an interval boundary. The hazard target is one
-		only in the interval containing the next encounter; earlier intervals
-		are observed negatives and later intervals are not at risk. If no
-		encounter is observed, intervals are supervised only when follow-up
-		reaches their upper boundary.
-		"""
-		batch, length = padding_mask.shape
-		device = x.device
-		num_horizons = len(self.future_horizons)
-		encounter_table = self.dictionary.encode("encounters")
-
-		# Find the first future encounter for every sequence position with one
-		# reverse cumulative minimum instead of looping over patients and positions.
-		positions = torch.arange(length, device=device).expand(batch, -1)
-		is_encounter = (~padding_mask.bool()) & (x[..., 8, :] == 1)
-		candidate_indices = torch.where(is_encounter, positions, torch.full_like(positions, length))
-		next_encounter_including = torch.flip(
-			torch.cummin(torch.flip(candidate_indices, dims=[1]), dim=1).values,
-			dims=[1],
-		)
-		next_encounter = torch.cat(
-			(
-				next_encounter_including[:, 1:],
-				torch.full((batch, 1), length, dtype=torch.long, device=device),
-			),
-			dim=1,
-		)
-		has_encounter = next_encounter < length
-		safe_encounter = next_encounter.clamp_max(length - 1)
-		future_time = torch.gather(x[..., 3, :], 1, safe_encounter)
-		future_code = torch.gather(x[..., 0, :], 1, safe_encounter).long()
-
-		start = x[..., 3, :]
-		valid_landmark = is_encounter & torch.isfinite(start)
-		delta = future_time - start
-
-		last_indices = (~padding_mask.bool()).sum(dim=1).clamp_min(1) - 1
-		last_time = torch.gather(
-			x[..., 3, :], 1, last_indices.unsqueeze(1)
-		)
-		followup = last_time - start
-		horizons = x.new_tensor(self.future_horizons)
-		upper = horizons.view(1, 1, num_horizons)
-		lower = torch.cat((x.new_zeros(1), horizons[:-1])).view(1, 1, num_horizons)
-		delta = delta.unsqueeze(-1)
-		has_encounter = has_encounter.unsqueeze(-1)
-		finite_delta = torch.isfinite(delta)
-		finite_followup = torch.isfinite(followup).unsqueeze(-1)
-
-		# Intervals are (lower, upper], with the first interval being
-		# (0, horizons[0]]. This makes each event belong to exactly one bin.
-		event_in_interval = (
-			has_encounter
-			& finite_delta
-			& (delta > lower)
-			& (delta <= upper)
-		)
-		observed_to_interval_end = finite_followup & (followup.unsqueeze(-1) >= upper)
-
-		# An interval is at risk when follow-up reaches its start and no earlier
-		# event has already occurred. An event in the current interval itself is
-		# observed and therefore contributes a positive hazard target.
-		at_risk = (
-			valid_landmark.unsqueeze(-1)
-			& finite_followup
-			& (followup.unsqueeze(-1) >= lower)
-			& (~has_encounter | (delta > lower))
-			& (observed_to_interval_end | event_in_interval)
-		)
-
-		hazard = event_in_interval.to(dtype=x.dtype)
-		mask = at_risk
-		codes = torch.where(
-			event_in_interval,
-			future_code.unsqueeze(-1).expand(-1, -1, num_horizons),
-			torch.zeros(batch, length, num_horizons, dtype=torch.long, device=device),
-		)
-		return hazard, mask, codes
 
 	#logits shape = (batch_size, context length, 1, 1)
 	#y shape = (batch_size, context length)
@@ -245,23 +177,25 @@ class DBTransformer(BaseModel):
 	
 	def _init_logger(self):
 		tags = [
-			"Loss", "Classification", "Future Hazard",
+			"Loss", "Classification", 
+			"Next Time", "Future Time",
 			"Next Table Top-K Accuracy", "Next Table Top-K AUC",
 			"Next Code Top-K Accuracy", "Next Code Top-K AUC",
 			"Future Code Top-K Accuracy", "Future Code Top-K AUC", "Entropy",
 		]
 		keys = [
 			["Classification Loss", "Next Time Loss", "Next Table Loss", "Next Code Loss",
-			 "Future Hazard Loss", "Future Code Loss"],
+			 "Future Time Loss", "Future Code Loss"],
 			["AUC-ROC", "Precision", "Recall", "Accuracy"],
-			["AUC-ROC", "Precision", "Recall", "Accuracy"],
+			["MAE", "RMSE"],
+			["MAE", "RMSE"],
 			["Top-1", "Top-5", "Top-10", "Top-20"],
 			["Top-1", "Top-5", "Top-10", "Top-20"],
 			["Top-1", "Top-5", "Top-10", "Top-20"],
 			["Top-1", "Top-5", "Top-10", "Top-20"],
 			["Top-1", "Top-5", "Top-10", "Top-20"],
 			["Top-1", "Top-5", "Top-10", "Top-20"],
-			["Classification", "Next Table", "Next Code", "Future Hazard", "Future Code"],
+			["Classification", "Next Table", "Next Code", "Future Time", "Future Code"],
 		]
 		self.logger = self.create_logger(tags, keys)
 		self.stat_logger = StatLogger(self.logger, num_classes=len(self.dictionary), device=self.device)
@@ -276,7 +210,6 @@ class DBTransformer(BaseModel):
 				"condition_dim": self.condition_dim,
 				"dictionary_size": len(self.dictionary),
 				"num_gaussians": self.num_gaussians,
-				"num_future_horizons": len(self.future_horizons)
 			}]
 		}
 		network_params = {
@@ -339,4 +272,26 @@ class DBTransformer(BaseModel):
 		
 		return Optimizer(optim_groups, **self.optimizer_params)
 
+	def load(self, file_name):
+		print(f"Loading model from {file_name}")
+		if isinstance(file_name, dict):
+			checkpoint = file_name
+		else:
+			checkpoint = torch.load(file_name + "/model.pt", weights_only = False)
+		print(f"checkpoint keys: {list(checkpoint.keys())}")
+		params = checkpoint["params"]
+		network_dicts = checkpoint["nets"]
+		print(f"network_dicts keys: {list(network_dicts[0].keys())}")
+		loss_functions = checkpoint["loss_functions"]
+		optimizer_dicts = checkpoint["optimizer"]
+
+		for net, net_dict in zip(self.nets, network_dicts):
+			net.load_states(net_dict)
+
+		if optimizer_dicts is not None:
+			for optimizer, optimizer_dict in zip(self.optimizers, optimizer_dicts):
+				optimizer.load_states(optimizer_dict)
+
+
+		self._load_loss_functions(loss_functions)
 	
